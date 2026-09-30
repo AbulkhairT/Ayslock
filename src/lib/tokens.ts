@@ -1,6 +1,8 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import { demoStorage } from "./demo-storage";
 
 // Links are signed, not stored: <record id>.<HMAC(purpose:id:version)>. They are
 // unguessable (192-bit MAC), scoped to one record and one purpose, and revocable by
@@ -16,7 +18,7 @@ function secret(): string {
     throw new Error("APP_SECRET (32+ characters) is required in production.");
   }
   // Local demo: generate once and keep it next to the demo database.
-  const file = path.resolve(process.cwd(), process.env.PGLITE_DIR || ".data/pglite", "..", "app-secret");
+  const file = path.join(demoStorage().dir.startsWith("memory://") ? path.join(os.tmpdir(), "ayslock-demo") : path.dirname(demoStorage().dir), "app-secret");
   try {
     cachedSecret = fs.readFileSync(file, "utf8").trim();
   } catch {

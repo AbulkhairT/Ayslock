@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { demoStorage } from "./demo-storage";
 import { env, modes } from "./env";
 
 export type Row = Record<string, unknown>;
@@ -123,7 +124,7 @@ export function getDb(): Promise<Db> {
       const db = await openDb({
         kind: modes.db,
         url: env.databaseUrl,
-        dataDir: env.pgliteDir.startsWith("memory://") ? env.pgliteDir : path.resolve(/*turbopackIgnore: true*/ process.cwd(), env.pgliteDir),
+        dataDir: modes.db === "pglite" ? demoStorage().dir : "",
         includeDemo: modes.auth === "demo",
         // On a real deployment, apply migrations with the Supabase CLI or `npm run db:migrate`.
         autoMigrate: modes.db === "pglite",

@@ -7,7 +7,6 @@ export const env = {
   emailFrom: process.env.EMAIL_FROM || "",
   appUrl: (process.env.APP_URL || "http://localhost:3000").replace(/\/$/, ""),
   cronSecret: process.env.CRON_SECRET || "",
-  pgliteDir: process.env.PGLITE_DIR || ".data/pglite",
 };
 
 export const modes = {

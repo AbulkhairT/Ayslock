@@ -22,7 +22,7 @@ npm run dev
 
 With no environment variables set, Ayslock runs in **local demo mode**, and a dark banner on every page says so:
 
-- **Database:** an embedded Postgres ([PGlite](https://pglite.dev)) stored in `.data/pglite`. It runs the same SQL migrations, constraints and queries as production. `npm run demo:reset` wipes it and re-seeds on next start.
+- **Database:** an embedded Postgres ([PGlite](https://pglite.dev)) stored in `.data/pglite`. On read-only hosts such as Vercel, it's kept in the server's temp folder instead, so the demo works there too, but the data is temporary: each server instance has its own copy, which resets on restart. Use Supabase for anything real. It runs the same SQL migrations, constraints and queries as production. `npm run demo:reset` wipes it and re-seeds on next start.
 - **Sign-in is simulated:** passwords are hashed and stored in the local database, and no email is verified. This is not production authentication.
 - **Emails are not sent:** every confirmation, reminder and approval is rendered at [`/demo/outbox`](http://localhost:3000/demo/outbox) (the "Notification preview"). That page only exists in local demo mode.
 

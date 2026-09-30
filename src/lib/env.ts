@@ -1,6 +1,7 @@
 // Which backends are real and which are simulated. Every simulated part is labeled in the UI.
 export const env = {
-  databaseUrl: process.env.DATABASE_URL || "",
+  // Vercel's Postgres/Neon integration sets POSTGRES_URL; Supabase gives you DATABASE_URL.
+  databaseUrl: process.env.DATABASE_URL || process.env.POSTGRES_URL || "",
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
   supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
   resendApiKey: process.env.RESEND_API_KEY || "",

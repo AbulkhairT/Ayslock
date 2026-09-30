@@ -19,7 +19,7 @@ export default async function SignIn() {
       <div className={`${card} mt-6`}>
         <AuthForm action={signInAction} submitLabel="Sign in" />
       </div>
-      {modes.auth === "demo" && modes.db === "pglite" && (
+      {modes.auth === "demo" && (
         <section className="mt-6 rounded-3xl border border-dashed border-warn/40 bg-warn-soft p-5 text-sm text-warn">
           <h2 className="font-bold">Demo accounts (simulated sign-in)</h2>
           <p className="mt-1">Password for all: <code className="font-mono font-semibold">{DEMO_PASSWORD}</code></p>

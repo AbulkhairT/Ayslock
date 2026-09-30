@@ -7,7 +7,7 @@ import { modes } from "@/lib/env";
 import { processDue } from "@/lib/notify";
 
 function guard() {
-  if (!(modes.db === "pglite" && modes.email === "preview")) throw new Error("Demo only.");
+  if (!(modes.auth === "demo" && modes.email === "preview")) throw new Error("Demo only.");
 }
 
 export async function runWorker() {

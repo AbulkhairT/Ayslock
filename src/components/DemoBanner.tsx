@@ -8,7 +8,7 @@ export function DemoBanner() {
   if (modes.auth === "demo") parts.push("sign-in is simulated");
   if (modes.email === "preview") parts.push("emails are previewed, not sent");
   if (modes.db === "pglite") {
-    parts.push(demoStorage().ephemeral ? "demo data is temporary and resets when the server restarts" : "data lives in a local database file");
+    parts.push(demoStorage().ephemeral ? "no database is connected, so bookings and sign-ins may not stick (add DATABASE_URL, see the README)" : "data lives in a local database file");
   }
   if (!parts.length) return null;
   return (

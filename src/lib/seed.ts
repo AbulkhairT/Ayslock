@@ -1,5 +1,6 @@
+import crypto from "node:crypto";
 import { DateTime } from "luxon";
-import type { Db, Queryable } from "./db";
+import type { Queryable } from "./db";
 import { hashPassword } from "./password";
 
 // Fictional demo providers for LOCAL DEMO MODE. All names, addresses and emails are made up.
@@ -79,37 +80,45 @@ export const DEMO_PROVIDERS: DemoProvider[] = [
   },
 ];
 
+/**
+ * Fixed ids for demo records, so separate server instances that each seed their own
+ * temporary copy (serverless hosts with no shared database) still agree on them.
+ */
+function stableId(key: string) {
+  const h = crypto.createHash("sha256").update(`ayslock-demo:${key}`).digest("hex");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
+
 function nextDay(zone: string, days: number[], afterDays: number, minute: number) {
   let d = DateTime.now().setZone(zone).startOf("day").plus({ days: afterDays });
   while (!days.includes(d.weekday)) d = d.plus({ days: 1 });
   return d.plus({ minutes: minute });
 }
 
-export async function seedDemo(db: Db) {
-  const existing = await db.query<{ n: number }>(`select count(*)::int as n from providers`);
+/** Seeds the demo profiles once. Pass a transaction so it's all-or-nothing. */
+export async function seedDemo(q: Queryable) {
+  const existing = await q.query<{ n: number }>(`select count(*)::int as n from providers`);
   if (existing[0].n > 0) return false;
-  await db.tx(async (q) => {
-    for (const p of DEMO_PROVIDERS) await seedProvider(q, p);
-  });
+  for (const p of DEMO_PROVIDERS) await seedProvider(q, p);
   return true;
 }
 
 async function seedProvider(q: Queryable, p: DemoProvider) {
   const [user] = await q.query<{ id: string }>(
-    `insert into demo_users (email, password_hash) values ($1, $2)
+    `insert into demo_users (id, email, password_hash) values ($1, $2, $3)
      on conflict (email) do update set email = excluded.email returning id`,
-    [p.email, hashPassword(DEMO_PASSWORD)],
+    [stableId(`user:${p.username}`), p.email, hashPassword(DEMO_PASSWORD)],
   );
   const [prov] = await q.query<{ id: string }>(
-    `insert into providers (owner_id, email, username, display_name, bio, timezone, location_kind, location_text, access_mode, buffer_minutes, min_notice_minutes)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id`,
-    [user.id, p.email, p.username, p.display_name, p.bio, p.timezone, p.location_kind, p.location_text, p.access_mode, p.buffer_minutes, p.min_notice_minutes],
+    `insert into providers (id, owner_id, email, username, display_name, bio, timezone, location_kind, location_text, access_mode, buffer_minutes, min_notice_minutes)
+     values ($12, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id`,
+    [user.id, p.email, p.username, p.display_name, p.bio, p.timezone, p.location_kind, p.location_text, p.access_mode, p.buffer_minutes, p.min_notice_minutes, stableId(`provider:${p.username}`)],
   );
   const serviceIds: string[] = [];
   for (const [i, s] of p.services.entries()) {
     const [row] = await q.query<{ id: string }>(
-      `insert into services (provider_id, name, description, duration_minutes, price_cents, currency, position) values ($1, $2, $3, $4, $5, $6, $7) returning id`,
-      [prov.id, s.name, s.description, s.duration, s.price, p.timezone.startsWith("Europe/London") ? "GBP" : "USD", i],
+      `insert into services (id, provider_id, name, description, duration_minutes, price_cents, currency, position) values ($8, $1, $2, $3, $4, $5, $6, $7) returning id`,
+      [prov.id, s.name, s.description, s.duration, s.price, p.timezone.startsWith("Europe/London") ? "GBP" : "USD", i, stableId(`service:${p.username}:${i}`)],
     );
     serviceIds.push(row.id);
   }

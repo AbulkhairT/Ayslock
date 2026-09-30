@@ -22,9 +22,20 @@ npm run dev
 
 With no environment variables set, Ayslock runs in **local demo mode**, and a dark banner on every page says so:
 
-- **Database:** an embedded Postgres ([PGlite](https://pglite.dev)) stored in `.data/pglite`. On read-only hosts such as Vercel, it's kept in the server's temp folder instead, so the demo works there too, but the data is temporary: each server instance has its own copy, which resets on restart. Use Supabase for anything real. It runs the same SQL migrations, constraints and queries as production. `npm run demo:reset` wipes it and re-seeds on next start.
+- **Database:** an embedded Postgres ([PGlite](https://pglite.dev)) stored in `.data/pglite`. It runs the same SQL migrations, constraints and queries as production. `npm run demo:reset` wipes it and re-seeds on next start.
 - **Sign-in is simulated:** passwords are hashed and stored in the local database, and no email is verified. This is not production authentication.
-- **Emails are not sent:** every confirmation, reminder and approval is rendered at [`/demo/outbox`](http://localhost:3000/demo/outbox) (the "Notification preview"). That page only exists in local demo mode.
+- **Emails are not sent:** every confirmation, reminder and approval is rendered at [`/demo/outbox`](http://localhost:3000/demo/outbox) (the "Notification preview"). That page only exists while sign-in is simulated.
+
+### Running the demo on Vercel
+
+Vercel runs your app on several short-lived server instances, and they don't share files. Without a database, each instance keeps its own temporary copy of the demo data. A sign-up on one instance is unknown to the next, so you get signed out, bookings seem to vanish, and times fail to load. The banner warns about this.
+
+The fix is a shared database. You don't need Supabase Auth or email for a working demo:
+
+1. In Vercel, open your project → **Storage** → **Create Database** → **Neon** (free), and connect it to the project. This sets `POSTGRES_URL` / `DATABASE_URL` for you. A Supabase project also works: copy its **Session pooler** connection string into `DATABASE_URL`.
+2. Redeploy.
+
+On first start, the app creates its tables and loads the demo profiles by itself. It's safe when several instances start at once. Sign-in is still labeled simulated, and emails still go to `/demo/outbox`, but everything persists and works across instances. `APP_SECRET` is optional here: without it, links are signed with a key derived from the database URL.
 
 ### Demo profiles
 
@@ -73,11 +84,7 @@ You can also create a new provider at `/signup`.
    - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Project Settings → API.
    - `APP_SECRET`: `openssl rand -hex 32`. It signs manage and access links; changing it invalidates every link already sent.
    - `APP_URL`: your public URL.
-2. **Apply the migrations**, either with the Supabase CLI (`supabase link` then `supabase db push`, which applies everything in `supabase/migrations/`) or with
-   ```bash
-   DATABASE_URL=… npm run db:migrate -- --supabase
-   ```
-   `--supabase` includes the row level security policies, which reference `auth.uid()`. Leave it off for plain Postgres.
+2. **Migrations** run automatically on first start, including the row level security policies when the database is a Supabase project. You can also apply them yourself with the Supabase CLI (`supabase db push`) or `DATABASE_URL=… npm run db:migrate`. The app recognizes a schema created either way. On Vercel, use Supabase's **Session pooler** connection string: the direct one is IPv6-only.
 3. **Auth:** in Supabase → Authentication → URL configuration, set the site URL to `APP_URL` and add `APP_URL/auth/callback` as a redirect URL. If email confirmation is on, new providers confirm their email before onboarding.
 4. **Email:** create a [Resend](https://resend.com) API key and verified sending domain, then set `RESEND_API_KEY` and `EMAIL_FROM`.
 5. **Background job (needed for automatic reminders):** the repo ships no schedule, so it deploys on any host, including Vercel Hobby. Confirmations and other emails are attempted right after each booking change, but 24-hour reminders, and anything still queued (such as retries after a failed send), only go out when something calls the job. Set `CRON_SECRET`, then have an external scheduler call `GET /api/cron/notifications` with `Authorization: Bearer $CRON_SECRET` every 5 minutes. Until that's set up, no reminders are sent. Options:

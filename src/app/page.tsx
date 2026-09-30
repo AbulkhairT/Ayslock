@@ -40,7 +40,7 @@ const FAQ = [
 ];
 
 export default function Home() {
-  const demo = modes.db === "pglite";
+  const demo = modes.auth === "demo";
   return (
     <div className="bg-white">
       <header className="sticky top-0 z-30 border-b border-line/70 bg-white/90 backdrop-blur">

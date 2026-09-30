@@ -6,7 +6,7 @@ import { migrate, openDb } from "../src/lib/db";
   if (!url) throw new Error("Set DATABASE_URL.");
   const db = await openDb({ kind: "postgres", url, autoMigrate: false });
   const onSupabase = process.argv.includes("--supabase");
-  await migrate(db, { includeDemo: process.argv.includes("--demo-auth"), includeSupabase: onSupabase });
+  await migrate(db, { includeDemo: process.argv.includes("--demo-auth"), includeSupabase: onSupabase ? true : "auto" });
   console.log(`Migrations applied${onSupabase ? " (including RLS policies)" : ""}.`);
   await db.close();
 })().catch((e) => {

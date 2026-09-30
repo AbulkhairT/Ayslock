@@ -18,8 +18,8 @@ const TONE: Record<string, string> = {
 };
 
 export default async function Outbox() {
-  // Local demo database only, so a misconfigured deployment can never expose this.
-  if (!(modes.db === "pglite" && modes.email === "preview")) notFound();
+  // Demo deployments only (simulated sign-in): with real auth this page never exists.
+  if (!(modes.auth === "demo" && modes.email === "preview")) notFound();
   const rows = await (await getDb()).query<{ id: string; kind: string; to_email: string; subject: string; body: string; status: string; send_after: Date; sent_at: Date | null; for_starts_at: Date | null }>(
     `select id, kind, to_email, subject, body, status, send_after, sent_at, for_starts_at from notifications order by created_at desc limit 100`,
   );

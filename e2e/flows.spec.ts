@@ -142,7 +142,8 @@ test("private mode: no availability without an approved, unrevoked link", async 
   await provider.locator("li", { hasText: "Jo Demo" }).getByRole("button", { name: "Approve" }).click();
   await expect(provider.getByText(/Access approved/)).toBeVisible();
 
-  const link = await outboxLink(page, /http:\/\/localhost:3100\/u\/sofia\?k=[A-Za-z0-9_.-]+/);
+  const found = await outboxLink(page, /https?:\/\/[^\s/]+\/u\/sofia\?k=[A-Za-z0-9_.-]+/);
+  const link = found.replace(/^https?:\/\/[^/]+/, "");
   await page.goto(link);
   await expect(page.getByText(/Private booking link for Jo Demo/)).toBeVisible();
   await page.getByRole("button", { name: /Book$/ }).first().click();
@@ -154,7 +155,7 @@ test("private mode: no availability without an approved, unrevoked link", async 
   await expect(provider.getByText("Link turned off.")).toBeVisible();
   await page.goto(link);
   await expect(page.getByText(/expired or was turned off/)).toBeVisible();
-  const k = new URL(link).searchParams.get("k")!;
+  const k = new URL(link, "http://x").searchParams.get("k")!;
   const svc = await request.get(`/api/slots?u=sofia&service=00000000-0000-0000-0000-000000000000&from=${new Date().toISOString()}&to=${new Date(Date.now() + 86400e3).toISOString()}&k=${k}`);
   expect(svc.status()).toBe(403);
 });
@@ -177,7 +178,7 @@ test("provider sign-up, onboarding and the ready screen", async ({ page }) => {
   await expect(page.getByLabel("Saturday")).not.toBeChecked();
   await page.getByRole("button", { name: "Create my Ayslock" }).click();
   await expect(page.getByRole("heading", { name: "Your Ayslock is ready." })).toBeVisible();
-  await expect(page.getByText("http://localhost:3100/u/jordan_trains")).toBeVisible();
+  await expect(page.getByText(/\/u\/jordan_trains$/)).toBeVisible();
   await expect(page.getByRole("img", { name: /QR code/ })).toBeVisible();
   await shot(page, "12-ready");
 

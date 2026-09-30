@@ -14,8 +14,12 @@ function secret(): string {
   if (cachedSecret) return cachedSecret;
   const fromEnv = process.env.APP_SECRET;
   if (fromEnv && fromEnv.length >= 32) return (cachedSecret = fromEnv);
-  if (process.env.NODE_ENV === "production" && process.env.DATABASE_URL) {
-    throw new Error("APP_SECRET (32+ characters) is required in production.");
+  const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (dbUrl) {
+    // Every server instance must sign links the same way. Without APP_SECRET, derive a key
+    // from the database credentials: anyone holding them could read the data anyway.
+    // Setting APP_SECRET is still preferred, so rotating DB passwords doesn't void links.
+    return (cachedSecret = crypto.createHash("sha256").update(`ayslock-links:${dbUrl}`).digest("hex"));
   }
   // Local demo: generate once and keep it next to the demo database.
   const file = path.join(demoStorage().dir.startsWith("memory://") ? path.join(os.tmpdir(), "ayslock-demo") : path.dirname(demoStorage().dir), "app-secret");

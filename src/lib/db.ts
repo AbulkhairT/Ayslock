@@ -20,28 +20,52 @@ const DEMO_SQL = path.join(process.cwd(), "db", "demo.sql");
 /** Migrations that only make sense on Supabase (they reference auth.uid()). */
 const SUPABASE_ONLY = /_rls\.sql$/;
 
-async function migrate(db: Db, opts: { includeDemo: boolean; includeSupabase: boolean }) {
-  await db.query(
-    "create table if not exists schema_migrations (name text primary key, applied_at timestamptz not null default now())",
-  );
-  const applied = new Set(
-    (await db.query<{ name: string }>("select name from schema_migrations")).map((r) => r.name),
-  );
-  const files = fs
-    .readdirSync(MIGRATIONS_DIR)
-    .filter((f) => f.endsWith(".sql"))
-    .filter((f) => opts.includeSupabase || !SUPABASE_ONLY.test(f))
-    .sort()
-    .map((f) => ({ name: f, file: path.join(MIGRATIONS_DIR, f) }));
-  if (opts.includeDemo) files.push({ name: "demo.sql", file: DEMO_SQL });
-  for (const m of files) {
-    if (applied.has(m.name)) continue;
-    const sql = fs.readFileSync(m.file, "utf8");
-    await db.tx(async (q) => {
-      await exec(q, sql);
+const CORE_TABLE = "providers";
+
+/**
+ * Apply pending migrations (and optionally the demo seed) in one transaction under an
+ * advisory lock, so several server instances starting at once can't race each other.
+ * A database set up earlier with `supabase db push` is detected and baselined.
+ */
+async function migrate(db: Db, opts: { includeDemo: boolean; includeSupabase: boolean | "auto"; seed?: boolean }) {
+  await db.tx(async (q) => {
+    await q.query("select pg_advisory_xact_lock(724501)");
+    await q.query("create table if not exists schema_migrations (name text primary key, applied_at timestamptz not null default now())");
+    const applied = new Set((await q.query<{ name: string }>("select name from schema_migrations")).map((r) => r.name));
+    const [probe] = await q.query<{ core: boolean; auth: boolean; rls: boolean }>(
+      `select to_regclass($1) is not null as core,
+              exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'auth' and p.proname = 'uid') as auth,
+              exists (select 1 from pg_policies where policyname = 'providers_owner') as rls`,
+      [`public.${CORE_TABLE}`],
+    );
+    const includeSupabase = opts.includeSupabase === "auto" ? probe.auth : opts.includeSupabase;
+    const files = fs
+      .readdirSync(MIGRATIONS_DIR)
+      .filter((f) => f.endsWith(".sql"))
+      .filter((f) => includeSupabase || !SUPABASE_ONLY.test(f))
+      .sort()
+      .map((f) => ({ name: f, file: path.join(MIGRATIONS_DIR, f) }));
+    if (opts.includeDemo) files.push({ name: "demo.sql", file: DEMO_SQL });
+    if (applied.size === 0 && probe.core) {
+      // Schema already created outside this runner (for example by the Supabase CLI).
+      for (const m of files) {
+        const already = m.name === "demo.sql" ? false : SUPABASE_ONLY.test(m.name) ? probe.rls : true;
+        if (already) {
+          await q.query("insert into schema_migrations (name) values ($1) on conflict do nothing", [m.name]);
+          applied.add(m.name);
+        }
+      }
+    }
+    for (const m of files) {
+      if (applied.has(m.name)) continue;
+      await exec(q, fs.readFileSync(m.file, "utf8"));
       await q.query("insert into schema_migrations (name) values ($1)", [m.name]);
-    });
-  }
+    }
+    if (opts.seed) {
+      const { seedDemo } = await import("./seed");
+      await seedDemo(q);
+    }
+  });
 }
 
 /** Run a multi-statement script. */
@@ -70,10 +94,29 @@ async function createPglite(dataDir: string): Promise<Db> {
   };
 }
 
+/**
+ * Hosted Postgres (Supabase, Neon) needs TLS. Their poolers present certificates Node
+ * can't always verify from sslmode in the URL alone, so TLS is configured here instead.
+ * Set PGSSL_STRICT=1 (with NODE_EXTRA_CA_CERTS) to require full certificate checks.
+ */
+export function poolConfig(url: string) {
+  const u = new URL(url);
+  const local = ["localhost", "127.0.0.1", "::1"].includes(u.hostname) || u.searchParams.get("sslmode") === "disable";
+  u.searchParams.delete("sslmode");
+  u.searchParams.delete("sslrootcert");
+  return {
+    connectionString: u.toString(),
+    ssl: local ? undefined : { rejectUnauthorized: process.env.PGSSL_STRICT === "1" },
+    // Serverless platforms run many small instances; keep each one's share of connections low.
+    max: process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME ? 3 : 10,
+    idleTimeoutMillis: 10_000,
+  };
+}
+
 async function createPostgres(url: string): Promise<Db> {
   const pgmod = await import("pg");
   const Pool = pgmod.default?.Pool ?? pgmod.Pool;
-  const pool = new Pool({ connectionString: url, max: 10 });
+  const pool = new Pool(poolConfig(url));
   return {
     query: async <T,>(text: string, params?: unknown[]) => (await pool.query(text, params as unknown[])).rows as T[],
     tx: async (fn) => {
@@ -101,14 +144,15 @@ export interface OpenOptions {
   url?: string;
   dataDir?: string;
   includeDemo?: boolean;
-  includeSupabase?: boolean;
+  includeSupabase?: boolean | "auto";
   autoMigrate?: boolean;
+  seed?: boolean;
 }
 
 export async function openDb(o: OpenOptions): Promise<Db> {
   const db = o.kind === "postgres" ? await createPostgres(o.url!) : await createPglite(o.dataDir!);
   if (o.autoMigrate !== false) {
-    await migrate(db, { includeDemo: !!o.includeDemo, includeSupabase: !!o.includeSupabase });
+    await migrate(db, { includeDemo: !!o.includeDemo, includeSupabase: o.includeSupabase ?? false, seed: o.seed });
   }
   return db;
 }
@@ -126,13 +170,12 @@ export function getDb(): Promise<Db> {
         url: env.databaseUrl,
         dataDir: modes.db === "pglite" ? demoStorage().dir : "",
         includeDemo: modes.auth === "demo",
-        // On a real deployment, apply migrations with the Supabase CLI or `npm run db:migrate`.
-        autoMigrate: modes.db === "pglite",
+        // Idempotent and locked, so it's safe on every cold start. The RLS policies are
+        // applied automatically when the database is a Supabase project.
+        includeSupabase: "auto",
+        // Demo profiles only exist while sign-in is simulated.
+        seed: modes.auth === "demo",
       });
-      if (modes.db === "pglite") {
-        const { seedDemo } = await import("./seed");
-        await seedDemo(db);
-      }
       return db;
     })();
     g.__aysDb.catch(() => {

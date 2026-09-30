@@ -62,7 +62,7 @@ You can also create a new provider at `/signup`.
 
 **Notifications**
 - Confirmation (or "request received") to the client and a new-booking email to the provider.
-- Reminder 24 hours before. Bookings made less than 24 hours ahead get only the confirmation.
+- Reminder 24 hours before, sent by the background job (see setup step 5; without a scheduler, no reminders go out). Bookings made less than 24 hours ahead get only the confirmation.
 - Emails for approval, decline, expiry, cancellation (either side) and reschedule; access request, approval and decline.
 - Reminders are cancelled on cancel or reschedule, and a new one is queued for the new time. The worker also re-checks that the appointment is still confirmed at the same start time before sending, so a reminder can never go out for a cancelled or moved booking.
 
@@ -80,9 +80,10 @@ You can also create a new provider at `/signup`.
    `--supabase` includes the row level security policies, which reference `auth.uid()`. Leave it off for plain Postgres.
 3. **Auth:** in Supabase → Authentication → URL configuration, set the site URL to `APP_URL` and add `APP_URL/auth/callback` as a redirect URL. If email confirmation is on, new providers confirm their email before onboarding.
 4. **Email:** create a [Resend](https://resend.com) API key and verified sending domain, then set `RESEND_API_KEY` and `EMAIL_FROM`.
-5. **Background job:** set `CRON_SECRET`, and call `GET /api/cron/notifications` with `Authorization: Bearer $CRON_SECRET` every 5 minutes. It expires stale pending requests and sends due emails. Options:
-   - Vercel: `vercel.json` already declares the cron, and Vercel sends the bearer token automatically when `CRON_SECRET` is set. Vercel's Hobby plan only runs crons daily, so use Pro or another scheduler for 5-minute reminders.
+5. **Background job (needed for automatic reminders):** the repo ships no schedule, so it deploys on any host, including Vercel Hobby. Confirmations and other emails are attempted right after each booking change, but 24-hour reminders, and anything still queued (such as retries after a failed send), only go out when something calls the job. Set `CRON_SECRET`, then have an external scheduler call `GET /api/cron/notifications` with `Authorization: Bearer $CRON_SECRET` every 5 minutes. Until that's set up, no reminders are sent. Options:
+   - A free external cron service (for example cron-job.org or a GitHub Actions `schedule` workflow) calling the URL with the header.
    - Supabase: `pg_cron` + `pg_net` calling the URL.
+   - Vercel Pro: add a `crons` entry for `/api/cron/notifications` in `vercel.json`. Vercel sends the bearer token automatically when `CRON_SECRET` is set. Hobby only allows daily crons, which is too slow for reminders.
    - Any server: `npm run worker` from cron (same logic, one pass).
    The job is safe to run concurrently or retry: rows are claimed with `FOR UPDATE SKIP LOCKED` under a 5-minute lease, each email carries an `Idempotency-Key` for Resend, and enqueueing is deduplicated by key.
 6. `npm run build && npm start`, or deploy to Vercel or any Node host.

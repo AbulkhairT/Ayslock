@@ -8,6 +8,7 @@ import { fmtDate, fmtDuration, fmtTime, fmtZone } from "@/lib/format";
 import { locationLine } from "@/lib/messages";
 import { Avatar } from "@/components/Avatar";
 import { Logo } from "@/components/Logo";
+import { NoDatabaseNotice, noSharedDatabase } from "@/components/NoDatabase";
 import { Notice } from "@/components/Notice";
 import { SaveProviderButton } from "@/components/SavedProviders";
 import { btnDanger, btnSecondary } from "@/components/ui";
@@ -29,7 +30,17 @@ export default async function ManagePage({ params, searchParams }: PageProps<"/b
   const { token } = await params;
   const sp = await searchParams;
   const m = await appointmentByToken(await getDb(), token);
-  if (!m) notFound();
+  if (!m) {
+    if (!noSharedDatabase()) notFound();
+    return (
+      <main id="main" className="mx-auto max-w-xl px-5 pb-16 pt-6">
+        <header className="mb-6"><Logo /></header>
+        <h1 className="mb-4 text-2xl font-bold tracking-tight">We can&apos;t show this booking</h1>
+        <NoDatabaseNotice what="Your booking was accepted, but this page was served by a different server copy that doesn't have it." />
+        <Link href="/" className="mt-6 inline-block font-semibold text-accent underline">Back to Ayslock</Link>
+      </main>
+    );
+  }
   const { appointment: a, provider, service } = m;
   const zone = a.client_timezone || provider.timezone;
   const start = new Date(a.starts_at);

@@ -4,6 +4,7 @@ import { currentUser } from "@/lib/auth";
 import { modes } from "@/lib/env";
 import { DEMO_PASSWORD, DEMO_PROVIDERS } from "@/lib/seed";
 import { Logo } from "@/components/Logo";
+import { NoDatabaseNotice } from "@/components/NoDatabase";
 import { card } from "@/components/ui";
 import { signInAction } from "../actions";
 import { AuthForm } from "../AuthForm";
@@ -15,6 +16,7 @@ export default async function SignIn() {
   return (
     <main id="main" className="mx-auto max-w-md px-5 pb-16 pt-8">
       <Logo />
+      <NoDatabaseNotice className="mt-6" what="Sign-ins can drop out right after you log in." />
       <h1 className="mt-10 text-3xl font-bold tracking-tight">Provider sign in</h1>
       <div className={`${card} mt-6`}>
         <AuthForm action={signInAction} submitLabel="Sign in" />

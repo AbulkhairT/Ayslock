@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { modes } from "@/lib/env";
 import { Logo } from "@/components/Logo";
+import { NoDatabaseNotice } from "@/components/NoDatabase";
 import { card } from "@/components/ui";
 import { signUpAction } from "../actions";
 import { AuthForm } from "../AuthForm";
@@ -14,6 +15,7 @@ export default async function SignUp() {
   return (
     <main id="main" className="mx-auto max-w-md px-5 pb-16 pt-8">
       <Logo />
+      <NoDatabaseNotice className="mt-6" what="A new account can disappear right after you create it." />
       <h1 className="mt-10 text-3xl font-bold tracking-tight">Create your Ayslock</h1>
       <p className="mt-2 text-muted">Get a link like ayslock.app/u/you and let clients book in a few taps.</p>
       <div className={`${card} mt-6`}>

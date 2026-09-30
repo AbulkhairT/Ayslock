@@ -132,7 +132,7 @@ export function BookingFlow(p: Props) {
               <button
                 type="button"
                 onClick={() => pick(s)}
-                className="flex w-full items-center justify-between gap-4 rounded-2xl border border-line bg-white p-4 text-left transition hover:border-accent"
+                className="flex w-full items-center justify-between gap-4 rounded-2xl border border-line bg-white p-4 text-left transition hover:border-ink"
               >
                 <span>
                   <span className="block text-base font-semibold">{s.name}</span>
@@ -142,7 +142,7 @@ export function BookingFlow(p: Props) {
                   </span>
                   {s.description && <span className="mt-1 block text-sm text-muted">{s.description}</span>}
                 </span>
-                <span className="shrink-0 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white">Book</span>
+                <span className="shrink-0 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white">Book</span>
               </button>
             </li>
           ))}

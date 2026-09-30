@@ -43,7 +43,7 @@ export function SavedProviders() {
       <ul className="flex flex-wrap gap-2">
         {saved.map((p) => (
           <li key={p.username}>
-            <Link href={`/u/${p.username}`} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-white px-4 text-sm font-semibold hover:border-accent">
+            <Link href={`/u/${p.username}`} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-white px-4 text-sm font-semibold hover:border-ink">
               {p.display_name} <span className="font-normal text-muted">@{p.username}</span>
             </Link>
           </li>

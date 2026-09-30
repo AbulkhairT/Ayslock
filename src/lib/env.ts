@@ -6,7 +6,13 @@ export const env = {
   supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
   resendApiKey: process.env.RESEND_API_KEY || "",
   emailFrom: process.env.EMAIL_FROM || "",
-  appUrl: (process.env.APP_URL || "http://localhost:3000").replace(/\/$/, ""),
+  // On Vercel without APP_URL, use the project's production domain (set by Vercel itself).
+  appUrl: (
+    process.env.APP_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`) ||
+    (process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`) ||
+    "http://localhost:3000"
+  ).replace(/\/$/, ""),
   cronSecret: process.env.CRON_SECRET || "",
 };
 

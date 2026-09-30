@@ -103,7 +103,7 @@ export function SlotPicker(p: SlotPickerProps) {
               onClick={() => setDay(key)}
               aria-label={`${d.toFormat("cccc, LLLL d")}${has ? "" : ", no times"}`}
               className={`flex min-h-16 flex-col items-center justify-center rounded-2xl border text-center transition ${
-                active ? "border-accent bg-accent text-white" : has ? "border-line bg-white hover:border-accent" : "border-transparent bg-transparent text-muted/50"
+                active ? "border-ink bg-ink text-white" : has ? "border-line bg-white hover:border-ink" : "border-transparent bg-transparent text-muted/50"
               }`}
             >
               <span className="text-xs font-semibold uppercase">{d.toFormat("ccc")}</span>
@@ -152,7 +152,7 @@ export function SlotPicker(p: SlotPickerProps) {
                   type="button"
                   aria-pressed={on}
                   onClick={() => p.onSelect(s)}
-                  className={`min-h-12 rounded-2xl border text-base font-semibold transition ${on ? "border-accent bg-accent text-white" : "border-line bg-white hover:border-accent"}`}
+                  className={`min-h-12 rounded-2xl border text-base font-semibold transition ${on ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink"}`}
                 >
                   {DateTime.fromISO(s).setZone(p.zone).toFormat("h:mm a")}
                 </button>

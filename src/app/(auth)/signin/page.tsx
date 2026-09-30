@@ -9,17 +9,17 @@ import { card } from "@/components/ui";
 import { signInAction } from "../actions";
 import { AuthForm } from "../AuthForm";
 
-export const metadata = { title: "Sign in · Ayslock" };
+export const metadata = { title: "Log in · Ayslock" };
 
 export default async function SignIn() {
   if (await currentUser()) redirect("/dashboard");
   return (
-    <main id="main" className="mx-auto max-w-md px-5 pb-16 pt-8">
+    <main id="main" className="mx-auto max-w-md px-5 pb-16 pt-6">
       <Logo />
       <NoDatabaseNotice className="mt-6" what="Sign-ins can drop out right after you log in." />
-      <h1 className="mt-10 text-3xl font-bold tracking-tight">Provider sign in</h1>
-      <div className={`${card} mt-6`}>
-        <AuthForm action={signInAction} submitLabel="Sign in" />
+      <h1 className="mt-12 text-4xl font-semibold tracking-tight">Log in to your page</h1>
+      <div className={`${card} mt-8`}>
+        <AuthForm action={signInAction} submitLabel="Log in" />
       </div>
       {modes.auth === "demo" && (
         <section className="mt-6 rounded-3xl border border-dashed border-warn/40 bg-warn-soft p-5 text-sm text-warn">
@@ -34,8 +34,8 @@ export default async function SignIn() {
           </ul>
         </section>
       )}
-      <p className="mt-6 text-center text-sm text-muted">
-        New to Ayslock? <Link href="/signup" className="font-semibold text-accent">Create your profile</Link>
+      <p className="mt-6 text-center text-muted">
+        No page yet? <Link href="/signup" className="font-semibold text-ink underline">Create one</Link>
       </p>
     </main>
   );

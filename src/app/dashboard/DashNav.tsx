@@ -16,7 +16,7 @@ export function DashNav() {
       {LINKS.map((l) => {
         const active = l.href === "/dashboard" ? path === "/dashboard" : path.startsWith(l.href);
         return (
-          <Link key={l.href} href={l.href} aria-current={active ? "page" : undefined} className={`flex min-h-11 flex-1 items-center justify-center rounded-full text-sm font-semibold ${active ? "bg-accent text-white" : "text-muted hover:text-ink"}`}>
+          <Link key={l.href} href={l.href} aria-current={active ? "page" : undefined} className={`flex min-h-11 flex-1 items-center justify-center rounded-full text-sm font-semibold ${active ? "bg-ink text-white" : "text-muted hover:text-ink"}`}>
             {l.label}
           </Link>
         );

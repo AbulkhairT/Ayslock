@@ -24,7 +24,7 @@ async function signIn(page: Page, email: string) {
   await page.goto("/signin");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill("ayslock-demo");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByRole("button", { name: "Log in" }).click();
   await expect(page).toHaveURL(/\/dashboard/);
 }
 
@@ -162,13 +162,18 @@ test("private mode: no availability without an approved, unrevoked link", async 
 });
 
 test("provider sign-up, onboarding and the ready screen", async ({ page }) => {
-  await page.goto("/signup");
+  // Claim the name on the home page first; it carries through sign-up into setup.
+  await page.goto("/");
+  await page.getByLabel("Choose your username").first().fill("@Jordan_Trains");
+  await expect(page.getByText("@jordan_trains is free").first()).toBeVisible({ timeout: 20_000 });
+  await page.getByRole("button", { name: "Create", exact: true }).first().click();
+  await expect(page.getByText(/\/@jordan_trains is free/)).toBeVisible();
   await page.getByLabel("Email").fill(`new${Date.now()}@example.com`);
   await page.getByLabel("Password").fill("correct-horse-battery");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(/\/onboarding/);
   await page.getByLabel("Your name").fill("Jordan Park");
-  await page.getByLabel("Username").fill("@Jordan_Trains");
+  await expect(page.getByLabel("Username")).toHaveValue("jordan_trains");
   await page.getByLabel("Meeting details").or(page.getByLabel("Address or area")).fill("Riverside Park, north gate");
   await shot(page, "11-onboarding");
   await page.getByRole("button", { name: "Next: services" }).click();

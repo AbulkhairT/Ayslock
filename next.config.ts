@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   // PGlite (local demo database) ships WASM and must be loaded by Node at runtime.
   serverExternalPackages: ["@electric-sql/pglite", "pg"],
   poweredByHeader: false,
+  // Short profile links: ayslock.app/@marco opens the same page as /u/marco.
+  async rewrites() {
+    return [{ source: "/@:username", destination: "/u/:username" }];
+  },
   async headers() {
     return [
       {

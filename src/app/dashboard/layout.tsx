@@ -15,7 +15,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
             @{provider.username} ↗
           </Link>
           <form action={signOutAction}>
-            <button type="submit" className="min-h-11 rounded-full px-3 text-sm font-semibold text-muted hover:text-ink">Sign out</button>
+            <button type="submit" className="min-h-11 rounded-full px-3 text-sm font-semibold text-muted hover:text-ink">Log out</button>
           </form>
         </div>
       </header>

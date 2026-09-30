@@ -1,33 +1,49 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
-import { modes } from "@/lib/env";
+import { getDb } from "@/lib/db";
+import { env, modes } from "@/lib/env";
+import { providerByUsername } from "@/lib/providers";
+import { usernameProblem } from "@/lib/username";
 import { Logo } from "@/components/Logo";
 import { NoDatabaseNotice } from "@/components/NoDatabase";
 import { card } from "@/components/ui";
 import { signUpAction } from "../actions";
 import { AuthForm } from "../AuthForm";
 
-export const metadata = { title: "Create your profile · Ayslock" };
+export const metadata = { title: "Create your page · Ayslock" };
 
-export default async function SignUp() {
-  if (await currentUser()) redirect("/dashboard");
+export default async function SignUp({ searchParams }: PageProps<"/signup">) {
+  const raw = (await searchParams).u;
+  const wanted = (typeof raw === "string" ? raw : "").trim().replace(/^@+/, "").toLowerCase().slice(0, 40);
+  if (await currentUser()) redirect(wanted ? `/onboarding?u=${encodeURIComponent(wanted)}` : "/dashboard");
+  // Only carry a name forward if it can actually be claimed right now.
+  const problem = wanted ? usernameProblem(wanted) ?? ((await providerByUsername(await getDb(), wanted)) ? `@${wanted} is taken. You can pick another in the next step.` : null) : null;
+  const claim = wanted && !problem ? wanted : undefined;
+  const host = env.appUrl.replace(/^https?:\/\//, "");
+
   return (
-    <main id="main" className="mx-auto max-w-md px-5 pb-16 pt-8">
+    <main id="main" className="mx-auto max-w-md px-5 pb-16 pt-6">
       <Logo />
       <NoDatabaseNotice className="mt-6" what="A new account can disappear right after you create it." />
-      <h1 className="mt-10 text-3xl font-bold tracking-tight">Create your Ayslock</h1>
-      <p className="mt-2 text-muted">Get a link like ayslock.app/u/you and let clients book in a few taps.</p>
-      <div className={`${card} mt-6`}>
+      <h1 className="mt-12 text-4xl font-semibold tracking-tight">Create your page</h1>
+      {claim ? (
+        <p className="mt-3 text-lg text-muted">
+          <span className="font-medium text-ink">{host}/@{claim}</span> is free. Add an email and password to keep it.
+        </p>
+      ) : (
+        <p className="mt-3 text-lg text-muted">{problem ?? "An email and a password. You'll pick your @username next."}</p>
+      )}
+      <div className={`${card} mt-8`}>
         {modes.auth === "demo" && (
           <p className="mb-4 rounded-2xl bg-warn-soft px-4 py-3 text-sm text-warn">
-            <strong>Demo sign-up.</strong> Accounts are stored in the local demo database. No email is verified.
+            <strong>Demo sign-up.</strong> Accounts are stored in the demo database. No email is verified.
           </p>
         )}
-        <AuthForm action={signUpAction} submitLabel="Create account" newPassword />
+        <AuthForm action={signUpAction} submitLabel="Create account" newPassword username={claim} />
       </div>
-      <p className="mt-6 text-center text-sm text-muted">
-        Already have one? <Link href="/signin" className="font-semibold text-accent">Sign in</Link>
+      <p className="mt-6 text-center text-muted">
+        Already have a page? <Link href="/signin" className="font-semibold text-ink underline">Log in</Link>
       </p>
     </main>
   );

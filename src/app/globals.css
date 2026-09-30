@@ -60,9 +60,9 @@ details > summary::-webkit-details-marker {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
 }
-@keyframes ays-type {
-  from { clip-path: inset(0 100% 0 0); }
-  to { clip-path: inset(0 0 0 0); }
+@keyframes ays-letter {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @keyframes ays-press {
   0%, 60% { box-shadow: 0 0 0 0 rgb(0 102 204 / 0); }
@@ -70,5 +70,5 @@ details > summary::-webkit-details-marker {
   100% { box-shadow: 0 0 0 0 rgb(0 102 204 / 0); }
 }
 .ays-in { animation: ays-in 360ms ease-out both; }
-.ays-type { display: inline-block; white-space: nowrap; animation: ays-type 900ms steps(5, end) 250ms both; }
+.ays-letter { animation: ays-letter 1ms linear both; }
 .ays-press { animation: ays-press 1400ms ease-out 700ms both; }

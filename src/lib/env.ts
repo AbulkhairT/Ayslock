@@ -51,3 +51,34 @@ export const modes = {
 };
 
 export const isDemo = modes.auth === "demo" || modes.email === "preview" || modes.db === "pglite";
+
+/**
+ * Demo mode (simulated sign-in, demo profiles, a local database) must be switched on on purpose
+ * wherever the site is hosted: DEMO_MODE=1. On your own computer it stays automatic.
+ * Hosted = on Vercel, or AYSLOCK_HOSTED=1 on any other host.
+ */
+const hosted = !!process.env.VERCEL || process.env.AYSLOCK_HOSTED === "1";
+const demoRequested = /^(1|true|yes)$/i.test(process.env.DEMO_MODE ?? "");
+export const demo = {
+  hosted,
+  requested: demoRequested,
+  allowed: demoRequested || !hosted,
+};
+
+/**
+ * Variables a hosted production site is missing. When this isn't empty the site shows a setup
+ * page instead of quietly running on simulated sign-in or throwaway data. Names only, never values.
+ */
+export const configProblems: string[] = demo.allowed
+  ? []
+  : [
+      ...(modes.db === "pglite" ? ["DATABASE_URL (or POSTGRES_URL)"] : []),
+      ...(!env.supabaseUrl ? ["NEXT_PUBLIC_SUPABASE_URL"] : []),
+      ...(!env.supabaseAnonKey ? ["NEXT_PUBLIC_SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)"] : []),
+    ];
+
+export class ConfigError extends Error {
+  constructor() {
+    super(`Ayslock is not configured: missing ${configProblems.join(", ")}. Set DEMO_MODE=1 to run the demo instead.`);
+  }
+}

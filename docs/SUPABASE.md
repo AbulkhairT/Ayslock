@@ -76,6 +76,8 @@ Without it, everything else works; there are just no 24-hour reminders. Expired 
 
 ## 8. Check it works
 
+If a setting is missing, the site shows **"This site isn't set up yet"** with the names of the missing settings, instead of running on simulated sign-in. (A demo site needs `DEMO_MODE=1` on purpose.) Profiles created earlier with simulated sign-in, or by accounts from a different Supabase project, stay in the database but aren't shown; `/api/status` counts them.
+
 1. Open `https://YOUR-DOMAIN/api/status`. It shows which variable each part is using (names only, never values), whether the database answers, and whether sign-in and email are real or simulated.
 2. Open the site: the yellow demo bar is gone.
 3. Claim a username on the home page → create an account → confirm from the email → finish setup.

@@ -11,6 +11,9 @@ export interface Provider {
   listed: boolean;
   /** Language of the provider's emails. */
   locale: "en" | "ru";
+  /** Made with simulated sign-in; hidden unless demo mode is on. */
+  demo: boolean;
+  bookings_seen_at: Date;
   bio: string;
   avatar_url: string | null;
   timezone: string;
@@ -85,7 +88,7 @@ export function toPublicProvider(p: Provider): PublicProvider {
   };
 }
 
-export const PROVIDER_COLS = `id, owner_id, email, username, display_name, profession, listed, locale, bio, avatar_url, timezone, location_kind,
+export const PROVIDER_COLS = `id, owner_id, email, username, display_name, profession, listed, locale, demo, bookings_seen_at, bio, avatar_url, timezone, location_kind,
   location_text, access_mode, min_notice_minutes, horizon_days, buffer_minutes, pending_expiry_hours, access_link_days`;
 
 export const APPT_COLS = `id, provider_id, kind, status, service_id, client_id, service_name, starts_at, ends_at,

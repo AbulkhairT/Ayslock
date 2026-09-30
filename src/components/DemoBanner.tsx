@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { demoStorage } from "@/lib/demo-storage";
-import { modes } from "@/lib/env";
+import { configProblems, modes } from "@/lib/env";
 import { getT } from "@/i18n/server";
 
 /**
@@ -9,7 +9,7 @@ import { getT } from "@/i18n/server";
  * it matters (the booking pages) instead of in a site-wide bar.
  */
 export async function DemoBanner() {
-  if (modes.auth !== "demo" && modes.db !== "pglite") return null;
+  if (configProblems.length || (modes.auth !== "demo" && modes.db !== "pglite")) return null;
   const t = (await getT()).common.demo;
   const parts: string[] = [];
   if (modes.auth === "demo") parts.push(t.simulatedSignIn);

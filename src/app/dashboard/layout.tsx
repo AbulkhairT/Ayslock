@@ -7,10 +7,13 @@ import { signOutAction } from "../(auth)/actions";
 import { DashNav } from "./DashNav";
 import { ShareBar } from "./ShareBar";
 import { env } from "@/lib/env";
+import { getDb } from "@/lib/db";
+import { newBookings } from "@/lib/providers";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   const provider = await requireProvider();
   const t = await getT();
+  const fresh = (await newBookings(await getDb(), provider)).length;
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 sm:px-6">
       <header className="flex items-center justify-between gap-2 py-2">
@@ -27,7 +30,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
         </div>
       </header>
       <ShareBar link={`${env.appUrl}/@${provider.username}`} username={provider.username} name={provider.display_name} />
-      <DashNav />
+      <DashNav newCount={fresh} />
       <main id="main" className="mt-6">{children}</main>
     </div>
   );

@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { demoStorage } from "./demo-storage";
-import { env, modes } from "./env";
+import { ConfigError, configProblems, env, modes } from "./env";
+import { setAccountCheck } from "./visibility";
 
 export type Row = Record<string, unknown>;
 
@@ -164,6 +165,8 @@ const g = globalThis as unknown as { __aysDb?: Promise<Db> };
 
 /** App-wide database handle. */
 export function getDb(): Promise<Db> {
+  // Never fall back to a throwaway database on a misconfigured production site.
+  if (configProblems.length) return Promise.reject(new ConfigError());
   if (!g.__aysDb) {
     g.__aysDb = (async () => {
       const db = await openDb({
@@ -177,6 +180,13 @@ export function getDb(): Promise<Db> {
         // Demo profiles only exist while sign-in is simulated.
         seed: modes.auth === "demo",
       });
+      if (modes.auth === "supabase") {
+        // On the Supabase project's own database, profiles must belong to a real account.
+        const [r] = await db.query<{ ok: boolean }>(
+          `select to_regclass('auth.users') is not null and has_table_privilege('auth.users', 'select') as ok`,
+        );
+        setAccountCheck(!!r?.ok);
+      }
       return db;
     })();
     g.__aysDb.catch(() => {

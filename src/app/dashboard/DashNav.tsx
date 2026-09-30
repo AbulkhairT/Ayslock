@@ -10,9 +10,10 @@ const LINKS = [
   { href: "/dashboard/settings", key: "settings" },
 ] as const;
 
-export function DashNav() {
+export function DashNav({ newCount = 0 }: { newCount?: number }) {
   const path = usePathname();
-  const t = useT().dashboard.nav;
+  const d = useT().dashboard;
+  const t = d.nav;
   return (
     <nav aria-label={t.label} className="flex gap-x-5 border-b border-line sm:gap-x-6">
       {LINKS.map((l) => {
@@ -25,6 +26,11 @@ export function DashNav() {
             className={`-mb-px inline-flex min-h-11 items-center border-b-2 text-[15px] ${active ? "border-accent font-semibold text-ink" : "border-transparent text-muted hover:text-ink"} ${l.href.endsWith("settings") ? "ml-auto" : ""}`}
           >
             {t[l.key]}
+            {l.key === "schedule" && newCount > 0 && (
+              <span className="ml-1.5 inline-grid min-w-5 place-items-center rounded-full bg-accent px-1.5 text-xs font-semibold leading-5 text-white" aria-label={d.newBookings.badge(newCount)}>
+                {newCount}
+              </span>
+            )}
           </Link>
         );
       })}

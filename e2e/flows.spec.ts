@@ -136,11 +136,17 @@ test("approval mode: request is pending, provider approves", async ({ page, brow
 
   const provider = await browser.newPage();
   await signIn(provider, "lena@example.com");
-  const card = provider.locator("li", { hasText: "Sam Demo" }).first();
+  // The provider sees the new request at the top of their schedule, with a count on the tab.
+  const fresh = provider.getByRole("region", { name: /new booking/ });
+  await expect(fresh.getByText(/Sam Demo/)).toBeVisible();
+  await expect(fresh.getByText("Wants approval").first()).toBeVisible();
+  const card = provider.locator("section[aria-labelledby=pending-title] li", { hasText: "Sam Demo" }).first();
   await expect(card).toBeVisible();
   await shot(provider, "07-provider-schedule");
   await card.getByRole("button", { name: "Approve" }).click();
   await expect(provider.getByText("Approved. The client has been notified.")).toBeVisible();
+  await provider.getByRole("button", { name: "Mark as seen" }).click();
+  await expect(provider.getByRole("region", { name: /new booking/ })).toHaveCount(0);
 
   await page.goto(manageUrl);
   await expect(page.getByRole("heading", { name: "You're booked" })).toBeVisible();

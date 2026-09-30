@@ -257,3 +257,9 @@ export async function removeException(f: FormData) {
   });
 }
 
+
+export async function markBookingsSeenAction(f: FormData) {
+  const provider = await requireProvider();
+  await (await getDb()).query(`update providers set bookings_seen_at = now() where id = $1`, [provider.id]);
+  redirect(backTo(f));
+}

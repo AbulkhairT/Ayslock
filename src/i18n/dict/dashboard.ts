@@ -5,6 +5,15 @@ const en = {
   layout: {
     bookingPageSr: " (your booking page, opens in a new tab)",
   },
+  newBookings: {
+    title: (n: number) => (n === 1 ? "1 new booking" : `${n} new bookings`),
+    badge: (n: number) => `${n} new`,
+    booked: "Booked",
+    requested: "Wants approval",
+    seen: "Mark as seen",
+    viewDay: "Open day",
+    hint: "Booked since you last checked. You also get an email for each one when email is set up.",
+  },
   nav: {
     label: "Dashboard",
     schedule: "Schedule",
@@ -245,6 +254,15 @@ const en = {
 const ru: typeof en = {
   layout: {
     bookingPageSr: " (ваша страница записи, откроется в новой вкладке)",
+  },
+  newBookings: {
+    title: (n: number) => plural("ru", n, { one: `${n} новая запись`, few: `${n} новые записи`, many: `${n} новых записей`, other: `${n} новой записи` }),
+    badge: (n: number) => `${n} нов.`,
+    booked: "Записался(-ась)",
+    requested: "Ждёт подтверждения",
+    seen: "Отметить как просмотренные",
+    viewDay: "Открыть день",
+    hint: "Записи с вашего последнего визита. Когда почта настроена, о каждой приходит ещё и письмо.",
   },
   nav: {
     label: "Кабинет",

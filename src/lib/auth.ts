@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { getDb } from "./db";
-import { env, modes } from "./env";
+import { demo, env, modes } from "./env";
 import { checkPassword, hashPassword } from "./password";
 import { rateLimit } from "./ratelimit";
 import { supabaseServer } from "./supabase/server";
@@ -16,6 +16,7 @@ const DEMO_COOKIE = "ays_demo_session";
 // ---- Local demo sign-in (simulated; used only when Supabase is not configured) ----
 
 export async function demoCreateUser(email: string, password: string) {
+  if (!demo.allowed) throw new Error("Simulated sign-in is off on this site.");
   const db = await getDb();
   const rows = await db.query<{ id: string }>(
     `insert into demo_users (email, password_hash) values ($1, $2) on conflict (email) do nothing returning id`,

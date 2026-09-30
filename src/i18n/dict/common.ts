@@ -35,6 +35,21 @@ const en = {
     onlineTbd: "Online (details from your provider)",
     inPersonTbd: "Location from your provider",
   },
+  setup: {
+    title: "This site isn't set up yet",
+    body: "It needs its database and sign-in settings before anyone can book. Nothing is running on demo data in the meantime.",
+    missing: "Missing settings",
+    step1: "In Vercel, open the project → Settings → Environment Variables and add the settings above for Production (the Supabase integration adds them for you).",
+    step2: "Redeploy: Deployments → latest → ⋯ → Redeploy.",
+    step3: "Open /api/status to check that the database and sign-in are connected.",
+    demo: "Want a demo site instead? Set DEMO_MODE=1 and redeploy. It then runs with sample profiles and simulated sign-in, clearly labeled.",
+  },
+  failure: {
+    title: "This page can't load right now",
+    body: "The site can't reach its database or sign-in service. Please try again in a moment.",
+    owner: "Run this site? Open /api/status to see which setting is wrong.",
+    retry: "Try again",
+  },
   notFound: {
     title: "We couldn't find that page",
     body: "The link may be mistyped, or the page was removed.",
@@ -76,6 +91,21 @@ const ru: typeof en = {
     online: (details: string) => `Онлайн: ${details}`,
     onlineTbd: "Онлайн (детали сообщит специалист)",
     inPersonTbd: "Адрес сообщит специалист",
+  },
+  setup: {
+    title: "Сайт ещё не настроен",
+    body: "Чтобы можно было записываться, нужно подключить базу данных и вход. До этого сайт не работает на демо-данных.",
+    missing: "Не хватает настроек",
+    step1: "В Vercel откройте проект → Settings → Environment Variables и добавьте эти настройки для Production (интеграция Supabase добавляет их сама).",
+    step2: "Пересоберите сайт: Deployments → последний → ⋯ → Redeploy.",
+    step3: "Откройте /api/status и проверьте, что база данных и вход подключены.",
+    demo: "Нужна демо-версия? Укажите DEMO_MODE=1 и пересоберите сайт. Тогда он работает с примерами профилей и имитацией входа, с пометкой «демо».",
+  },
+  failure: {
+    title: "Страница сейчас не загружается",
+    body: "Сайт не может связаться с базой данных или сервисом входа. Попробуйте ещё раз чуть позже.",
+    owner: "Это ваш сайт? Откройте /api/status, чтобы увидеть, какая настройка неверна.",
+    retry: "Попробовать снова",
   },
   notFound: {
     title: "Такой страницы нет",

@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { modes } from "@/lib/env";
 import { getDb, pgCode } from "@/lib/db";
 import { parseHoursForm } from "@/lib/hours";
 import { formObject, priceToCents, profileSchema, serviceSchema } from "@/lib/profile";
@@ -50,9 +51,9 @@ export async function createProfile(_: OnboardState, form: FormData): Promise<On
   try {
     await db.tx(async (q) => {
       const [row] = await q.query<{ id: string }>(
-        `insert into providers (owner_id, email, username, display_name, bio, avatar_url, timezone, location_kind, location_text, profession, locale)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id`,
-        [user.id, user.email, p.username, p.display_name, p.bio, p.avatar_url || null, p.timezone, p.location_kind, p.location_text, p.profession, locale],
+        `insert into providers (owner_id, email, username, display_name, bio, avatar_url, timezone, location_kind, location_text, profession, locale, demo)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) returning id`,
+        [user.id, user.email, p.username, p.display_name, p.bio, p.avatar_url || null, p.timezone, p.location_kind, p.location_text, p.profession, locale, modes.auth === "demo"],
       );
       for (const [i, s] of services.entries()) {
         await q.query(

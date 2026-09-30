@@ -4,7 +4,7 @@ import { accessLink, listAccessGrants } from "@/lib/access";
 import { sweepExpired } from "@/lib/booking";
 import { getDb } from "@/lib/db";
 import { fmtDate, fmtDuration, fmtTime } from "@/lib/format";
-import { servicesFor } from "@/lib/providers";
+import { newBookings, servicesFor } from "@/lib/providers";
 import { requireProvider } from "@/lib/session";
 import type { Provider } from "@/lib/types";
 import type { Dict, Locale } from "@/i18n";
@@ -12,7 +12,7 @@ import { getT } from "@/i18n/server";
 import { CopyButton } from "@/components/CopyButton";
 import { btnDanger, btnSmall, btnSmallAccent, input, label } from "@/components/ui";
 import {
-  addAppointmentAction, approveAccessAction, approveAction, blockTimeAction, cancelAction, declineAccessAction, declineAction,
+  addAppointmentAction, markBookingsSeenAction, approveAccessAction, approveAction, blockTimeAction, cancelAction, declineAccessAction, declineAction,
   revokeAccessAction, rescheduleAction,
 } from "./actions";
 import { Flash } from "./Flash";
@@ -60,11 +60,12 @@ export default async function Schedule({ searchParams }: PageProps<"/dashboard">
 
   const db = await getDb();
   await sweepExpired(db, provider.id);
-  const [rows, pending, services, grants] = await Promise.all([
+  const [rows, pending, services, grants, fresh] = await Promise.all([
     db.query<Row>(`${SELECT} where a.provider_id = $1 and a.status in ('pending', 'confirmed') and a.starts_at < $3 and a.ends_at > $2 order by a.starts_at`, [provider.id, start.toJSDate(), end.toJSDate()]),
     db.query<Row>(`${SELECT} where a.provider_id = $1 and a.status = 'pending' and a.expires_at > now() order by a.starts_at`, [provider.id]),
     servicesFor(db, provider.id),
     listAccessGrants(db, provider),
+    newBookings(db, provider),
   ]);
   const pendingGrants = grants.filter((g) => g.status === "pending");
   const activeGrants = grants.filter((g) => g.status === "approved" && g.expires_at && new Date(g.expires_at) > new Date());
@@ -80,6 +81,37 @@ export default async function Schedule({ searchParams }: PageProps<"/dashboard">
   return (
     <div>
       <Flash sp={sp} />
+
+      {fresh.length > 0 && (
+        <section aria-labelledby="new-title" className="mb-8 rounded-2xl bg-accent-soft p-4 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 id="new-title" className="text-lg font-semibold text-accent-strong">{dict.dashboard.newBookings.title(fresh.length)}</h2>
+            <form action={markBookingsSeenAction}>
+              <input type="hidden" name="back" value={back} />
+              <button className={btnSmall}>{dict.dashboard.newBookings.seen}</button>
+            </form>
+          </div>
+          <p className="mt-1 text-sm text-accent-strong/80">{dict.dashboard.newBookings.hint}</p>
+          <ul className="mt-3 divide-y divide-accent/15">
+            {fresh.map((b) => {
+              const when = DateTime.fromJSDate(new Date(b.starts_at)).setZone(zone);
+              return (
+                <li key={b.id}>
+                  <Link href={qs(when)} className="flex items-center justify-between gap-3 py-2.5 hover:underline">
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">{b.client_name ?? "—"}{b.service_name ? ` · ${b.service_name}` : ""}</span>
+                      <span className="block text-sm text-muted">{fmtDate(b.starts_at, zone, locale)}, {fmtTime(b.starts_at, zone, locale)}</span>
+                    </span>
+                    <span className={`shrink-0 text-sm font-medium ${b.status === "pending" ? "text-warn" : "text-ok"}`}>
+                      {b.status === "pending" ? dict.dashboard.newBookings.requested : dict.dashboard.newBookings.booked}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">

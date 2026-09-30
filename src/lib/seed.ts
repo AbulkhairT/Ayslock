@@ -114,8 +114,8 @@ async function seedProvider(q: Queryable, p: DemoProvider) {
     [stableId(`user:${p.username}`), p.email, hashPassword(DEMO_PASSWORD)],
   );
   const [prov] = await q.query<{ id: string }>(
-    `insert into providers (id, owner_id, email, username, display_name, bio, timezone, location_kind, location_text, access_mode, buffer_minutes, min_notice_minutes, profession)
-     values ($12, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $13) returning id`,
+    `insert into providers (id, owner_id, email, username, display_name, bio, timezone, location_kind, location_text, access_mode, buffer_minutes, min_notice_minutes, profession, demo)
+     values ($12, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $13, true) returning id`,
     [user.id, p.email, p.username, p.display_name, p.bio, p.timezone, p.location_kind, p.location_text, p.access_mode, p.buffer_minutes, p.min_notice_minutes, stableId(`provider:${p.username}`), p.profession],
   );
   const serviceIds: string[] = [];

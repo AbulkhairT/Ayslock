@@ -1,6 +1,7 @@
 import type { Queryable } from "./db";
 import type { AccessMode } from "./types";
 import { normalizeUsername } from "./username";
+import { visibleSql } from "./visibility";
 
 export interface SearchResult {
   username: string;
@@ -36,11 +37,11 @@ export async function searchProviders(q: Queryable, raw: string): Promise<Search
     `select username, display_name, profession, avatar_url, access_mode,
             lower(username) = $1 as exact
        from providers p
-      where lower(username) = $1
+      where ${visibleSql("p")} and (lower(username) = $1
          or (listed and access_mode <> 'private'
              and exists (select 1 from services s where s.provider_id = p.id and s.active)
              and (($4 and lower(username) like $3 || '%')
-                  or (not $5 and (lower(display_name) like $2 || '%' or lower(display_name) like '% ' || $2 || '%'))))
+                  or (not $5 and (lower(display_name) like $2 || '%' or lower(display_name) like '% ' || $2 || '%')))))
       order by exact desc, lower(display_name) like $2 || '%' desc, display_name
       limit 8`,
     [username ?? "", like(bare), like(username ?? ""), !!username, handle],

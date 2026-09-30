@@ -259,12 +259,27 @@ alter table providers add column if not exists locale text not null default 'en'
 alter table clients add column if not exists locale text not null default 'en' check (locale in ('en', 'ru'));
 alter table access_grants add column if not exists locale text not null default 'en' check (locale in ('en', 'ru'));
 
+-- ===== 20260930000006_demo_and_seen.sql =====
+-- demo: profiles created with simulated sign-in (demo mode). They stay in the database but are
+-- only shown while demo mode is on, so a production site never lists them.
+alter table providers add column if not exists demo boolean not null default false;
+do $$
+begin
+  if to_regclass('public.demo_users') is not null then
+    update providers p set demo = true where exists (select 1 from demo_users d where d.id = p.owner_id);
+  end if;
+end $$;
+
+-- bookings_seen_at: when the provider last dismissed "new bookings" on their schedule.
+alter table providers add column if not exists bookings_seen_at timestamptz not null default now();
+
 insert into schema_migrations (name) values
   ('20260930000001_schema.sql'),
   ('20260930000002_rls.sql'),
   ('20260930000003_lockdown_rls.sql'),
   ('20260930000004_search.sql'),
-  ('20260930000005_locale.sql')
+  ('20260930000005_locale.sql'),
+  ('20260930000006_demo_and_seen.sql')
 on conflict do nothing;
 
 commit;

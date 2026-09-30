@@ -49,6 +49,7 @@ const en = {
   username3: "Use at least 3 characters.",
   usernameChars: "Use only letters, numbers and underscores.",
   providerNotFoundWe: "We couldn't find that provider.",
+  demoSignInOff: "Simulated sign-in is off on this site.",
   // Built with a value; used directly, not through localizeError.
   hoursEnd: (day: string) => `${day}: the end time must be after the start time.`,
   hoursBreak: (day: string) => `${day}: the break needs a start and a later end.`,
@@ -102,6 +103,7 @@ const ru: typeof en = {
   username3: "Не меньше 3 символов.",
   usernameChars: "Только латинские буквы, цифры и подчёркивания.",
   providerNotFoundWe: "Не удалось найти этого специалиста.",
+  demoSignInOff: "Имитация входа на этом сайте выключена.",
   hoursEnd: (day: string) => `${day}: конец рабочего дня должен быть позже начала.`,
   hoursBreak: (day: string) => `${day}: у перерыва должно быть начало и более позднее окончание.`,
   hoursBreakInside: (day: string) => `${day}: перерыв должен быть внутри рабочего времени.`,

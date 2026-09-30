@@ -41,7 +41,8 @@ test("home lookup: unknown usernames get a friendly message, @ and case are igno
   await shot(page, "01-home");
   await page.getByLabel("Enter your provider's @username.").fill("@nobody_here");
   await page.getByRole("button", { name: "Find" }).click();
-  await expect(page.getByText("We couldn't find @nobody_here")).toBeVisible();
+  // First database touch on a fresh demo database runs migrations and the seed.
+  await expect(page.getByText("We couldn't find @nobody_here")).toBeVisible({ timeout: 20_000 });
   await page.getByLabel("Enter your provider's @username.").fill("@Marco");
   await page.getByRole("button", { name: "Find" }).click();
   await expect(page).toHaveURL(/\/u\/marco$/);

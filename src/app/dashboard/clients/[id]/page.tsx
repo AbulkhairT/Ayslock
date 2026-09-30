@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { fmtDate, fmtTime } from "@/lib/format";
 import { requireProvider } from "@/lib/session";
+import { getT } from "@/i18n/server";
 import { btnSmallAccent, textarea } from "@/components/ui";
 import { saveClientNotes } from "../../actions";
 import { Flash } from "../../Flash";
@@ -34,9 +35,11 @@ export default async function ClientPage({ params, searchParams }: PageProps<"/d
     [id, provider.id],
   );
   const zone = provider.timezone;
+  const { locale, dashboard } = await getT();
+  const t = dashboard.clients;
   return (
     <div className="space-y-4">
-      <Link href="/dashboard/clients" className="inline-block min-h-11 py-2.5 text-sm font-semibold text-muted">← All clients</Link>
+      <Link href="/dashboard/clients" className="inline-block min-h-11 py-2.5 text-sm font-semibold text-muted">{t.all}</Link>
       <Flash sp={sp} />
       <section className="border-t border-line pt-5">
         <h1 className="text-[28px] font-semibold leading-tight tracking-tight">{client.name}</h1>
@@ -49,24 +52,24 @@ export default async function ClientPage({ params, searchParams }: PageProps<"/d
         <form action={saveClientNotes} className="space-y-3">
           <input type="hidden" name="id" value={client.id} />
           <input type="hidden" name="back" value={`/dashboard/clients/${client.id}`} />
-          <label htmlFor="notes" className="block font-semibold">Private notes</label>
-          <p className="text-sm text-muted">Only you can see these. Clients never do.</p>
+          <label htmlFor="notes" className="block font-semibold">{t.notes}</label>
+          <p className="text-sm text-muted">{t.notesHint}</p>
           <textarea id="notes" name="notes" rows={4} defaultValue={client.notes} maxLength={5000} className={textarea} />
-          <button className={btnSmallAccent}>Save notes</button>
+          <button className={btnSmallAccent}>{t.saveNotes}</button>
         </form>
       </section>
       <section className="border-t border-line pt-5">
-        <h2 className="mb-2 font-semibold">History</h2>
-        {history.length === 0 ? <p className="text-sm text-muted">No appointments yet.</p> : (
+        <h2 className="mb-2 font-semibold">{t.history}</h2>
+        {history.length === 0 ? <p className="text-sm text-muted">{t.noHistory}</p> : (
           <ul className="divide-y divide-line">
             {history.map((h) => (
               <li key={h.id} className="flex items-center justify-between gap-3 py-3">
                 <span>
                   <span className="block font-semibold">{h.service_name}</span>
-                  <span className="block text-sm text-muted">{fmtDate(h.starts_at, zone)}, {fmtTime(h.starts_at, zone)}</span>
+                  <span className="block text-sm text-muted">{fmtDate(h.starts_at, zone, locale)}, {fmtTime(h.starts_at, zone, locale)}</span>
                   {h.client_note && <span className="block text-sm">&ldquo;{h.client_note}&rdquo;</span>}
                 </span>
-                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${BADGE[h.status]}`}>{h.status}</span>
+                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${BADGE[h.status]}`}>{t.status[h.status] ?? h.status}</span>
               </li>
             ))}
           </ul>

@@ -1,4 +1,6 @@
 import { hhmmToMinutes } from "./format";
+import { getDict } from "@/i18n";
+import type { Locale } from "@/i18n/config";
 import type { Interval } from "./slots";
 
 export const WEEKDAYS = [
@@ -10,6 +12,16 @@ export const WEEKDAYS = [
   { n: 6, short: "Sat", long: "Saturday" },
   { n: 7, short: "Sun", long: "Sunday" },
 ];
+
+const RU_DAYS = [
+  ["Пн", "Понедельник"], ["Вт", "Вторник"], ["Ср", "Среда"], ["Чт", "Четверг"],
+  ["Пт", "Пятница"], ["Сб", "Суббота"], ["Вс", "Воскресенье"],
+];
+
+/** WEEKDAYS with names in the reader's language. */
+export function weekdays(locale: Locale = "en") {
+  return locale === "ru" ? WEEKDAYS.map((d, i) => ({ n: d.n, short: RU_DAYS[i][0], long: RU_DAYS[i][1] })) : WEEKDAYS;
+}
 
 export interface DayHours {
   open: boolean;
@@ -24,26 +36,27 @@ export const DEFAULT_HOURS: Record<number, DayHours> = Object.fromEntries(
 );
 
 /** Parse the hours editor fields (d{n}_open, d{n}_start, d{n}_end, d{n}_bstart, d{n}_bend). */
-export function parseHoursForm(form: FormData): { hours: Record<number, Interval[]> } | { error: string } {
+export function parseHoursForm(form: FormData, locale: Locale = "en"): { hours: Record<number, Interval[]> } | { error: string } {
+  const t = getDict(locale).errors;
   const hours: Record<number, Interval[]> = {};
-  for (const d of WEEKDAYS) {
+  for (const d of weekdays(locale)) {
     if (!form.get(`d${d.n}_open`)) continue;
     const s = hhmmToMinutes(String(form.get(`d${d.n}_start`) ?? ""));
     const e = hhmmToMinutes(String(form.get(`d${d.n}_end`) ?? ""));
-    if (s == null || e == null || e <= s) return { error: `${d.long}: the end time must be after the start time.` };
+    if (s == null || e == null || e <= s) return { error: t.hoursEnd(d.long) };
     const bsRaw = String(form.get(`d${d.n}_bstart`) ?? "").trim();
     const beRaw = String(form.get(`d${d.n}_bend`) ?? "").trim();
     if (bsRaw || beRaw) {
       const bs = hhmmToMinutes(bsRaw);
       const be = hhmmToMinutes(beRaw);
-      if (bs == null || be == null || be <= bs) return { error: `${d.long}: the break needs a start and a later end.` };
-      if (bs <= s || be >= e) return { error: `${d.long}: the break must be inside working hours.` };
+      if (bs == null || be == null || be <= bs) return { error: t.hoursBreak(d.long) };
+      if (bs <= s || be >= e) return { error: t.hoursBreakInside(d.long) };
       hours[d.n] = [{ start: s, end: bs }, { start: be, end: e }];
     } else {
       hours[d.n] = [{ start: s, end: e }];
     }
   }
-  if (!Object.keys(hours).length) return { error: "Open at least one day a week." };
+  if (!Object.keys(hours).length) return { error: t.openOneDay };
   return { hours };
 }
 

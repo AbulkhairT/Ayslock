@@ -53,6 +53,7 @@ You can also create a new provider at `/signup`.
 
 **Clients**
 - Home page centered on “Who are you booking with?” with one search box for a name or @username (live results as you type; also works without JavaScript). An exact username always finds the provider. Name search only includes providers who are listed (a setting, on by default), not invite-only, and have a bookable service. Results show only name, @username, what they do and photo, never availability. Unknown names get a plain empty state, and profiles are `noindex`.
+- English and Russian everywhere, including emails and calendar files. The first visit follows the browser's language (English otherwise); the EN/RU switch in every header remembers the choice for a year. Clients get emails in the language they booked in, providers in the language they last used the site in. All strings live in `src/i18n/dict/*`; Russian must have exactly the same keys as English (TypeScript enforces it).
 - Providers copy their link (`/@name`) or @username from the top of the dashboard; shared links open the booking page directly and carry a link preview.
 - Profile at `/u/<username>`: name, avatar (initials if none), @username, bio, location or online details, services with duration and optional price.
 - Booking: service → date and time → name and email (phone and note optional) → confirm. Times are shown in the browser's timezone by default, with a timezone picker; the final summary shows the full date and the timezone.

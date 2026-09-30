@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useT } from "@/i18n/client";
 
 export interface SavedProvider {
   username: string;
@@ -29,6 +30,7 @@ export function writeSaved(list: SavedProvider[]) {
 
 /** Saved on this device only; nothing is sent to the server. */
 export function SavedProviders() {
+  const t = useT();
   const [saved, setSaved] = useState<SavedProvider[]>([]);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is only readable after mount
@@ -38,7 +40,7 @@ export function SavedProviders() {
   return (
     <section aria-labelledby="saved-title" className="mt-8 w-full">
       <h2 id="saved-title" className="text-[13px] font-semibold uppercase tracking-wide text-muted">
-        Saved on this device
+        {t.booking.saved.title}
       </h2>
       <ul className="mt-2 divide-y divide-line border-y border-line">
         {saved.map((p) => (
@@ -58,6 +60,7 @@ export function SavedProviders() {
 }
 
 export function SaveProviderButton({ provider, className, compact }: { provider: SavedProvider; className?: string; compact?: boolean }) {
+  const t = useT().booking.saved;
   const [saved, setSaved] = useState(false);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is only readable after mount
@@ -69,10 +72,10 @@ export function SaveProviderButton({ provider, className, compact }: { provider:
     writeSaved(list);
     setSaved(!saved);
   };
-  const text = saved ? `Saved ${provider.display_name} on this device` : `Save ${provider.display_name} for next time`;
+  const text = saved ? t.savedOn(provider.display_name) : t.saveFor(provider.display_name);
   return (
     <button type="button" onClick={toggle} aria-pressed={saved} aria-label={compact ? text : undefined} className={className}>
-      {compact ? (saved ? "Saved" : "Save") : text}
+      {compact ? (saved ? t.saved : t.save) : text}
     </button>
   );
 }

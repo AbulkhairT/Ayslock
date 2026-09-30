@@ -4,13 +4,22 @@ function stamp(d: Date) {
 function esc(s: string) {
   return s.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\;");
 }
+/** Fold at 75 octets (RFC 5545), never splitting a character: Cyrillic is 2 bytes in UTF-8. */
 function fold(line: string) {
   const out: string[] = [];
-  while (line.length > 74) {
-    out.push(line.slice(0, 74));
-    line = " " + line.slice(74);
+  let cur = "";
+  let bytes = 0;
+  for (const ch of line) {
+    const n = Buffer.byteLength(ch);
+    if (bytes + n > 74) {
+      out.push(cur);
+      cur = " ";
+      bytes = 1;
+    }
+    cur += ch;
+    bytes += n;
   }
-  out.push(line);
+  out.push(cur);
   return out.join("\r\n");
 }
 

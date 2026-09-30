@@ -9,6 +9,9 @@ import { signToken, tokenRecordId, verifyToken } from "./tokens";
 import { APPT_COLS, type Appointment, type Provider, type Service } from "./types";
 import { verifyAccess } from "./access";
 import { isValidZone } from "./format";
+import { isLocale, type Locale } from "@/i18n/config";
+
+const asLocale = (v: unknown): Locale => (isLocale(v) ? v : "en");
 
 export type BookingErrorCode = "slot_taken" | "not_available" | "not_found" | "forbidden" | "invalid" | "expired";
 
@@ -30,12 +33,12 @@ function isOverlap(e: unknown) {
  * the background job.
  */
 export async function sweepExpired(q: Queryable, providerId?: string) {
-  const rows = await q.query<{ id: string; provider_id: string; service_name: string; starts_at: Date; ends_at: Date; client_timezone: string | null; name: string; email: string }>(
+  const rows = await q.query<{ id: string; provider_id: string; service_name: string; starts_at: Date; ends_at: Date; client_timezone: string | null; name: string; email: string; locale: string }>(
     `update appointments a set status = 'expired', updated_at = now()
      from clients c
      where a.client_id = c.id and a.status = 'pending' and a.expires_at <= now()
        and ($1::uuid is null or a.provider_id = $1::uuid)
-     returning a.id, a.provider_id, a.service_name, a.starts_at, a.ends_at, a.client_timezone, c.name, c.email`,
+     returning a.id, a.provider_id, a.service_name, a.starts_at, a.ends_at, a.client_timezone, c.name, c.email, c.locale`,
     [providerId ?? null],
   );
   for (const r of rows) {
@@ -48,6 +51,7 @@ export async function sweepExpired(q: Queryable, providerId?: string) {
       endsAt: new Date(r.ends_at),
       clientName: r.name,
       clientZone: r.client_timezone || provider.timezone,
+      clientLocale: asLocale(r.locale),
     });
     await enqueue(q, { providerId: r.provider_id, appointmentId: r.id, kind: "expired", to: r.email, ...m, dedupeKey: `expired:${r.id}` });
   }
@@ -63,15 +67,19 @@ async function loadService(q: Queryable, providerId: string, serviceId: string):
   return rows[0] ?? null;
 }
 
-async function upsertClient(q: Queryable, providerId: string, c: { name: string; email: string; phone?: string | null }) {
-  const rows = await q.query<{ id: string }>(
-    `insert into clients (provider_id, name, email, phone) values ($1, $2, $3, $4)
+/**
+ * Create or update the client. `locale` is the language they booked in; when a provider adds
+ * someone (no locale), a new client gets the provider's language and an existing one keeps theirs.
+ */
+async function upsertClient(q: Queryable, providerId: string, c: { name: string; email: string; phone?: string | null; locale?: Locale; fallbackLocale?: Locale }) {
+  const rows = await q.query<{ id: string; locale: string }>(
+    `insert into clients (provider_id, name, email, phone, locale) values ($1, $2, $3, $4, coalesce($5, $6, 'en'))
      on conflict (provider_id, email) do update
-       set name = excluded.name, phone = coalesce(excluded.phone, clients.phone)
-     returning id`,
-    [providerId, c.name, c.email.toLowerCase(), c.phone || null],
+       set name = excluded.name, phone = coalesce(excluded.phone, clients.phone), locale = coalesce($5, clients.locale)
+     returning id, locale`,
+    [providerId, c.name, c.email.toLowerCase(), c.phone || null, c.locale ?? null, c.fallbackLocale ?? null],
   );
-  return rows[0].id;
+  return { id: rows[0].id, locale: asLocale(rows[0].locale) };
 }
 
 /** Kick the notification worker after a write, so confirmations go out right away. */
@@ -90,6 +98,7 @@ export const bookingInput = z.object({
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   note: z.string().trim().max(1000).optional().or(z.literal("")),
   timezone: z.string().max(64).refine(isValidZone, "Unknown timezone."),
+  locale: z.enum(["en", "ru"]).optional(),
   accessToken: z.string().max(80).optional().nullable(),
   website: z.string().max(0).optional().or(z.literal("")), // honeypot, must stay empty
 });
@@ -134,7 +143,8 @@ export async function createBooking(raw: unknown, ctx: { ip?: string; now?: Date
       const expiresAt = pending
         ? new Date(Math.min(now.getTime() + provider.pending_expiry_hours * 3_600_000, startsAt.getTime()))
         : null;
-      const clientId = await upsertClient(q, provider.id, input);
+      const client = await upsertClient(q, provider.id, input);
+      const clientId = client.id;
       const [appt] = await q.query<{ id: string }>(
         `insert into appointments (provider_id, kind, status, service_id, client_id, service_name, starts_at, ends_at,
            occupied_until, provider_timezone, client_timezone, client_note, source, expires_at)
@@ -144,7 +154,7 @@ export async function createBooking(raw: unknown, ctx: { ip?: string; now?: Date
           provider.timezone, input.timezone, input.note || null, expiresAt],
       );
       const manageToken = signToken("manage", appt.id, 1);
-      const d = { provider, serviceName: service.name, startsAt, endsAt, clientName: input.name, clientZone: input.timezone, manageToken };
+      const d = { provider, serviceName: service.name, startsAt, endsAt, clientName: input.name, clientZone: input.timezone, clientLocale: client.locale, manageToken };
       const toClient = pending ? emails.requested(d, expiresAt!) : emails.confirmed(d);
       await enqueue(q, { providerId: provider.id, appointmentId: appt.id, kind: pending ? "requested" : "confirmation", to: input.email, ...toClient, dedupeKey: `${pending ? "requested" : "confirmation"}:${appt.id}` });
       await enqueue(q, { providerId: provider.id, appointmentId: appt.id, kind: "provider_new", to: provider.email, ...emails.providerNew(d, pending), dedupeKey: `provider_new:${appt.id}` });
@@ -167,7 +177,7 @@ export interface ManagedAppointment {
   appointment: Appointment;
   provider: Provider;
   service: Service | null;
-  client: { name: string; email: string };
+  client: { name: string; email: string; locale: Locale };
 }
 
 /** Resolve a manage token to exactly one appointment. Anything else gets null. */
@@ -180,8 +190,8 @@ export async function appointmentByToken(q: Queryable, token: string | null | un
   const provider = await providerById(q, appointment.provider_id);
   if (!provider) return null;
   const service = appointment.service_id ? await loadService(q, provider.id, appointment.service_id) : null;
-  const [client] = await q.query<{ name: string; email: string }>(`select name, email from clients where id = $1`, [appointment.client_id]);
-  return { appointment, provider, service, client };
+  const [row] = await q.query<{ name: string; email: string; locale: string }>(`select name, email, locale from clients where id = $1`, [appointment.client_id]);
+  return { appointment, provider, service, client: { ...row, locale: asLocale(row?.locale) } };
 }
 
 function detailsFor(m: ManagedAppointment, a: Appointment, manageToken?: string) {
@@ -192,6 +202,7 @@ function detailsFor(m: ManagedAppointment, a: Appointment, manageToken?: string)
     endsAt: new Date(a.ends_at),
     clientName: m.client.name,
     clientZone: a.client_timezone || m.provider.timezone,
+    clientLocale: m.client.locale,
     manageToken,
   };
 }
@@ -278,8 +289,8 @@ async function managedForProvider(q: Queryable, provider: Provider, appointmentI
   const appointment = rows[0];
   if (!appointment) throw new BookingError("not_found", "Appointment not found.");
   const service = appointment.service_id ? await loadService(q, provider.id, appointment.service_id) : null;
-  const [client] = await q.query<{ name: string; email: string }>(`select name, email from clients where id = $1 and provider_id = $2`, [appointment.client_id, provider.id]);
-  return { appointment, provider, service, client };
+  const [row] = await q.query<{ name: string; email: string; locale: string }>(`select name, email, locale from clients where id = $1 and provider_id = $2`, [appointment.client_id, provider.id]);
+  return { appointment, provider, service, client: { ...row, locale: asLocale(row?.locale) } };
 }
 
 export async function approveRequest(provider: Provider, appointmentId: string) {
@@ -368,7 +379,8 @@ export async function addManualAppointment(
       if (!service) throw new BookingError("not_found", "Pick a service.");
       const endsAt = new Date(input.startsAt.getTime() + service.duration_minutes * 60_000);
       const occupiedUntil = new Date(endsAt.getTime() + provider.buffer_minutes * 60_000);
-      const clientId = await upsertClient(q, provider.id, { name: input.name, email: input.email, phone: input.phone });
+      const client = await upsertClient(q, provider.id, { name: input.name, email: input.email, phone: input.phone, fallbackLocale: provider.locale });
+      const clientId = client.id;
       const [appt] = await q.query<{ id: string }>(
         `insert into appointments (provider_id, kind, status, service_id, client_id, service_name, starts_at, ends_at,
            occupied_until, provider_timezone, client_timezone, client_note, source)
@@ -377,7 +389,7 @@ export async function addManualAppointment(
       );
       if (input.notify) {
         const token = signToken("manage", appt.id, 1);
-        const d = { provider, serviceName: service.name, startsAt: input.startsAt, endsAt, clientName: input.name, clientZone: provider.timezone, manageToken: token };
+        const d = { provider, serviceName: service.name, startsAt: input.startsAt, endsAt, clientName: input.name, clientZone: provider.timezone, clientLocale: client.locale, manageToken: token };
         await enqueue(q, { providerId: provider.id, appointmentId: appt.id, kind: "confirmation", to: input.email.toLowerCase(), ...emails.confirmed(d), dedupeKey: `confirmation:${appt.id}` });
         await scheduleReminder(q, { providerId: provider.id, appointmentId: appt.id, startsAt: input.startsAt, to: input.email.toLowerCase(), ...emails.reminder(d) });
       }

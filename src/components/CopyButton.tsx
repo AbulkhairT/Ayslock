@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/i18n/client";
 
-export function CopyButton({ text, className, label = "Copy link" }: { text: string; className?: string; label?: string }) {
+export function CopyButton({ text, className, label }: { text: string; className?: string; label?: string }) {
+  const t = useT().common;
   const [done, setDone] = useState(false);
   return (
     <button
@@ -14,11 +16,11 @@ export function CopyButton({ text, className, label = "Copy link" }: { text: str
           setDone(true);
           setTimeout(() => setDone(false), 2000);
         } catch {
-          window.prompt("Copy this link:", text);
+          window.prompt(t.copyPrompt, text);
         }
       }}
     >
-      <span aria-live="polite">{done ? "Copied" : label}</span>
+      <span aria-live="polite">{done ? t.copied : label ?? t.copyLink}</span>
     </button>
   );
 }

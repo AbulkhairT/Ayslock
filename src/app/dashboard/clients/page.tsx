@@ -2,9 +2,12 @@ import Link from "next/link";
 import { getDb } from "@/lib/db";
 import { fmtShortDate } from "@/lib/format";
 import { requireProvider } from "@/lib/session";
+import { getT } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Clients · Ayslock" };
+export async function generateMetadata() {
+  return { title: (await getT()).dashboard.clients.metaTitle };
+}
 
 export default async function Clients({ searchParams }: PageProps<"/dashboard/clients">) {
   const provider = await requireProvider();
@@ -22,18 +25,20 @@ export default async function Clients({ searchParams }: PageProps<"/dashboard/cl
     [provider.id, q],
   );
   const zone = provider.timezone;
+  const { locale, dashboard } = await getT();
+  const t = dashboard.clients;
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-[28px] font-semibold leading-tight tracking-tight">Clients</h1>
+        <h1 className="text-[28px] font-semibold leading-tight tracking-tight">{t.title}</h1>
         <form role="search" className="w-full sm:w-64">
-          <label htmlFor="q" className="sr-only">Search your clients</label>
-          <input id="q" name="q" defaultValue={q} placeholder="Search your clients" className="min-h-11 w-full rounded-xl border border-line bg-white px-4 text-sm focus:border-accent focus:outline-none" />
+          <label htmlFor="q" className="sr-only">{t.search}</label>
+          <input id="q" name="q" defaultValue={q} placeholder={t.search} className="min-h-11 w-full rounded-xl border border-line bg-white px-4 text-sm focus:border-accent focus:outline-none" />
         </form>
       </div>
       {rows.length === 0 ? (
         <div className="border-y border-line py-10 text-center text-muted">
-          {q ? "No clients match that search." : "Clients appear here after their first booking."}
+          {q ? t.noMatch : t.empty}
         </div>
       ) : (
         <ul className="divide-y divide-line border-y border-line">
@@ -45,8 +50,8 @@ export default async function Clients({ searchParams }: PageProps<"/dashboard/cl
                   <span className="block truncate text-sm text-muted">{c.email}</span>
                 </span>
                 <span className="shrink-0 text-right text-xs text-muted">
-                  {c.next_visit ? <span className="block font-semibold text-accent">Next {fmtShortDate(c.next_visit, zone)}</span> : c.last_visit && <span className="block">Last {fmtShortDate(c.last_visit, zone)}</span>}
-                  <span className="block">{c.visits} {c.visits === 1 ? "visit" : "visits"}</span>
+                  {c.next_visit ? <span className="block font-semibold text-accent">{t.next(fmtShortDate(c.next_visit, zone, locale))}</span> : c.last_visit && <span className="block">{t.last(fmtShortDate(c.last_visit, zone, locale))}</span>}
+                  <span className="block">{t.visits(c.visits)}</span>
                 </span>
               </Link>
             </li>

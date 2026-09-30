@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { signIn, signOut, signUp } from "@/lib/auth";
 import { env } from "@/lib/env";
+import { getDict, localizeError } from "@/i18n";
+import { getLocale } from "@/i18n/server";
 import { clientIp, requestOrigin } from "@/lib/request";
 import { normalizeUsername } from "@/lib/username";
 
@@ -18,15 +20,16 @@ export async function signUpAction(_: AuthState, form: FormData): Promise<AuthSt
   const claimed = normalizeUsername(String(form.get("username") ?? ""));
   const next = claimed ? `/onboarding?u=${claimed}` : "/onboarding";
   const r = await signUp(email, String(form.get("password") ?? ""), await clientIp(), next, await requestOrigin(env.appUrl));
-  if (!r.ok) return { error: r.error, email };
-  if (r.confirmEmail) return { info: `We sent a link to ${email}. Open it on this device to confirm your account and finish setting up.`, email };
+  const locale = await getLocale();
+  if (!r.ok) return { error: localizeError(r.error, locale), email };
+  if (r.confirmEmail) return { info: getDict(locale).auth.confirmSent(email), email };
   redirect(next);
 }
 
 export async function signInAction(_: AuthState, form: FormData): Promise<AuthState> {
   const email = String(form.get("email") ?? "");
   const r = await signIn(email, String(form.get("password") ?? ""), await clientIp());
-  if (!r.ok) return { error: r.error, email };
+  if (!r.ok) return { error: localizeError(r.error, await getLocale()), email };
   redirect("/dashboard");
 }
 

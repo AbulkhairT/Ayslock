@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { btn, input, label, textarea } from "@/components/ui";
+import { useT } from "@/i18n/client";
 
 export function AccessRequestForm({ username, displayName, invalidLink, emailOn = true }: { username: string; displayName: string; invalidLink: boolean; emailOn?: boolean }) {
+  const dict = useT();
+  const t = dict.booking.access;
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -18,26 +21,26 @@ export function AccessRequestForm({ username, displayName, invalidLink, emailOn 
     }).catch(() => null);
     if (res?.ok) return setState("sent");
     const data = await res?.json().catch(() => null);
-    setError(data?.error || "Something went wrong. Please try again.");
+    setError(data?.error || dict.common.somethingWrong);
     setState("idle");
   }
 
   if (state === "sent") {
     return (
       <section className="border-y border-line py-8" aria-live="polite">
-        <h2 className="text-xl font-semibold tracking-tight">Request sent</h2>
-        <p className="mt-1 text-muted">{emailOn ? <>If {displayName} approves it, you&apos;ll get an email with a private link to book.</> : <>If {displayName} approves it, they&apos;ll send you a private link to book.</>}</p>
+        <h2 className="text-xl font-semibold tracking-tight">{t.sentTitle}</h2>
+        <p className="mt-1 text-muted">{emailOn ? t.sentEmail(displayName) : t.sentNoEmail(displayName)}</p>
       </section>
     );
   }
 
   return (
     <section aria-labelledby="access-title">
-      <h2 id="access-title" className="text-xl font-semibold tracking-tight">Ask to book</h2>
-      <p className="mt-1 text-[15px] text-muted">{displayName} shares available times by invitation. Send a quick request and you&apos;ll get a private booking link once approved.</p>
+      <h2 id="access-title" className="text-xl font-semibold tracking-tight">{t.title}</h2>
+      <p className="mt-1 text-[15px] text-muted">{t.intro(displayName)}</p>
       {invalidLink && (
         <p role="alert" className="mt-4 rounded-xl bg-warn-soft px-4 py-3 text-[15px] text-warn">
-          That booking link has expired or was turned off. You can ask for a new one below.
+          {t.invalidLink}
         </p>
       )}
       <form
@@ -48,24 +51,24 @@ export function AccessRequestForm({ username, displayName, invalidLink, emailOn 
         }}
       >
         <div>
-          <label htmlFor="ar-name" className={label}>Your name</label>
+          <label htmlFor="ar-name" className={label}>{dict.booking.flow.yourName}</label>
           <input id="ar-name" name="name" required autoComplete="name" className={input} maxLength={100} />
         </div>
         <div>
-          <label htmlFor="ar-email" className={label}>Email</label>
+          <label htmlFor="ar-email" className={label}>{dict.booking.flow.email}</label>
           <input id="ar-email" name="email" type="email" required autoComplete="email" className={input} maxLength={200} />
         </div>
         <div>
-          <label htmlFor="ar-msg" className={label}>Message <span className="font-normal text-muted">(optional)</span></label>
-          <textarea id="ar-msg" name="message" rows={3} className={textarea} maxLength={500} placeholder="How do you know them, or what do you need?" />
+          <label htmlFor="ar-msg" className={label}>{t.message} <span className="font-normal text-muted">({dict.common.optional})</span></label>
+          <textarea id="ar-msg" name="message" rows={3} className={textarea} maxLength={500} placeholder={t.placeholder} />
         </div>
         <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
-          <label htmlFor="ar-website">Leave this empty</label>
+          <label htmlFor="ar-website">{dict.booking.flow.honeypot}</label>
           <input id="ar-website" name="website" tabIndex={-1} autoComplete="off" />
         </div>
         {error && <p role="alert" className="rounded-xl bg-bad-soft px-4 py-3 text-[15px] text-bad">{error}</p>}
         <button type="submit" className={`${btn} w-full`} disabled={state === "sending"}>
-          {state === "sending" ? "Sending…" : "Request access"}
+          {state === "sending" ? t.sending : t.request}
         </button>
       </form>
     </section>

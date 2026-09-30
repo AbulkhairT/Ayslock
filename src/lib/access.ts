@@ -6,6 +6,7 @@ import { providerByUsername } from "./providers";
 import { rateLimit } from "./ratelimit";
 import { signToken, tokenRecordId, verifyToken } from "./tokens";
 import type { Provider } from "./types";
+import { isLocale } from "@/i18n/config";
 
 export interface AccessGrant {
   id: string;
@@ -39,6 +40,7 @@ export const accessRequestInput = z.object({
   email: z.string().trim().toLowerCase().email("Please enter a valid email.").max(200),
   message: z.string().trim().max(500).optional().or(z.literal("")),
   website: z.string().max(0).optional().or(z.literal("")),
+  locale: z.enum(["en", "ru"]).optional(),
 });
 
 export async function requestAccess(raw: unknown, ctx: { ip?: string } = {}) {
@@ -54,8 +56,8 @@ export async function requestAccess(raw: unknown, ctx: { ip?: string } = {}) {
     const existing = await q.query(`select 1 from access_grants where provider_id = $1 and email = $2 and status = 'pending'`, [provider.id, input.email]);
     if (existing.length) return; // already waiting; don't spam the provider
     const [g] = await q.query<{ id: string }>(
-      `insert into access_grants (provider_id, name, email, message) values ($1, $2, $3, $4) returning id`,
-      [provider.id, input.name, input.email, input.message || ""],
+      `insert into access_grants (provider_id, name, email, message, locale) values ($1, $2, $3, $4, $5) returning id`,
+      [provider.id, input.name, input.email, input.message || "", input.locale ?? "en"],
     );
     await enqueue(q, { providerId: provider.id, accessGrantId: g.id, kind: "access_requested", to: provider.email, ...emails.accessRequested(provider, input.name, input.email, input.message || ""), dedupeKey: `access_requested:${g.id}` });
   });
@@ -77,15 +79,15 @@ export function accessLink(provider: Provider, grantId: string) {
 export async function approveAccess(provider: Provider, grantId: string) {
   const db = await getDb();
   const link = await db.tx(async (q) => {
-    const [g] = await q.query<AccessGrant>(
+    const [g] = await q.query<AccessGrant & { locale: string }>(
       `update access_grants set status = 'approved', decided_at = now(), expires_at = now() + make_interval(days => $3)
        where id = $1 and provider_id = $2 and status = 'pending'
-       returning id, name, email, message, status, expires_at, created_at`,
+       returning id, name, email, message, status, expires_at, created_at, locale`,
       [grantId, provider.id, provider.access_link_days],
     );
     if (!g) throw new Error("This request was already handled.");
     const link = accessLink(provider, g.id);
-    await enqueue(q, { providerId: provider.id, accessGrantId: g.id, kind: "access_approved", to: g.email, ...emails.accessApproved(provider, g.name, link, new Date(g.expires_at!)), dedupeKey: `access_approved:${g.id}` });
+    await enqueue(q, { providerId: provider.id, accessGrantId: g.id, kind: "access_approved", to: g.email, ...emails.accessApproved(provider, g.name, link, new Date(g.expires_at!), isLocale(g.locale) ? g.locale : "en"), dedupeKey: `access_approved:${g.id}` });
     return link;
   });
   sendSoon(db);
@@ -95,13 +97,13 @@ export async function approveAccess(provider: Provider, grantId: string) {
 export async function declineAccess(provider: Provider, grantId: string) {
   const db = await getDb();
   await db.tx(async (q) => {
-    const [g] = await q.query<AccessGrant>(
+    const [g] = await q.query<AccessGrant & { locale: string }>(
       `update access_grants set status = 'declined', decided_at = now() where id = $1 and provider_id = $2 and status = 'pending'
-       returning id, name, email, message, status, expires_at, created_at`,
+       returning id, name, email, message, status, expires_at, created_at, locale`,
       [grantId, provider.id],
     );
     if (!g) throw new Error("This request was already handled.");
-    await enqueue(q, { providerId: provider.id, accessGrantId: g.id, kind: "access_declined", to: g.email, ...emails.accessDeclined(provider, g.name), dedupeKey: `access_declined:${g.id}` });
+    await enqueue(q, { providerId: provider.id, accessGrantId: g.id, kind: "access_declined", to: g.email, ...emails.accessDeclined(provider, g.name, isLocale(g.locale) ? g.locale : "en"), dedupeKey: `access_declined:${g.id}` });
   });
   sendSoon(db);
 }

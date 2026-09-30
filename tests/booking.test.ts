@@ -93,7 +93,9 @@ describe(`double booking prevention (${PG ? "Postgres" : "PGlite"})`, () => {
     const r = await Promise.allSettled([insert("a"), insert("b")]);
     expect(r.filter((x) => x.status === "fulfilled")).toHaveLength(1);
     const err = r.find((x) => x.status === "rejected") as PromiseRejectedResult;
-    expect(m.db.pgCode(err.reason)).toBe("23P01");
+    // Usually an exclusion violation; when both inserts check each other at the same instant,
+    // Postgres may break the tie as a deadlock instead. Either way the overlap is refused.
+    expect(["23P01", "40P01"]).toContain(m.db.pgCode(err.reason));
   });
 
   it("buffers are enforced on the booking that follows", async () => {
@@ -306,5 +308,42 @@ describe("provider search", () => {
     expect(await names("_a")).toEqual([]);
     expect(await names("m")).toEqual([]);
     expect(await names("@")).toEqual([]);
+  });
+});
+
+describe("email language", () => {
+  const mail = (id: string) =>
+    db.query<{ kind: string; subject: string; body: string }>(`select kind, subject, body from notifications where appointment_id = $1 order by kind`, [id]);
+
+  it("writes to the client in the language they booked in and to the provider in theirs", async () => {
+    const { s, slots } = await freeSlots("marco", 30);
+    const r = await m.booking.createBooking(input("marco", s.id, slots[0], { locale: "ru" }));
+    const rows = await mail(r.appointmentId);
+    const client = rows.find((x) => x.kind === "confirmation")!;
+    const provider = rows.find((x) => x.kind === "provider_new")!;
+    expect(client.subject).toMatch(/^Вы записаны: /);
+    expect(client.body).toMatch(/^Здравствуйте, Test Client!/);
+    expect(client.body).toMatch(/Дата: [а-я]+, \d+ [а-я]+ 20\d\d/);
+    expect(client.body).toMatch(/Время: \d\d:\d\d–\d\d:\d\d/);
+    expect(provider.subject).toMatch(/^New booking: /);
+
+    // The provider switches to Russian: their next emails follow; the client's language is remembered.
+    await db.query(`update providers set locale = 'ru' where username = 'marco'`);
+    try {
+      await m.booking.cancelByClient(r.manageToken);
+      const after = await mail(r.appointmentId);
+      expect(after.find((x) => x.kind === "cancelled")!.subject).toMatch(/^Отменено: /);
+      expect(after.find((x) => x.kind === "provider_changed")!.body).toMatch(/отменил\(а\) свою запись/);
+    } finally {
+      await db.query(`update providers set locale = 'en' where username = 'marco'`);
+    }
+  });
+
+  it("keeps English for clients who booked in English", async () => {
+    const { s, slots } = await freeSlots("marco", 30);
+    const r = await m.booking.createBooking(input("marco", s.id, slots[1]));
+    const client = (await mail(r.appointmentId)).find((x) => x.kind === "confirmation")!;
+    expect(client.subject).toMatch(/^Booked: /);
+    expect(client.body).toMatch(/^Hi Test Client,/);
   });
 });

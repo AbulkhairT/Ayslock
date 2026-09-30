@@ -5,9 +5,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { SlotPicker } from "@/components/SlotPicker";
 import { btn, btnSecondary } from "@/components/ui";
+import { useLocale, useT } from "@/i18n/client";
+import { luxonFormats } from "@/lib/format";
 
 export function Reschedule(p: { token: string; username: string; serviceId: string; zone: string; horizonDays: number; approval: boolean }) {
   const router = useRouter();
+  const dict = useT();
+  const t = dict.booking.reschedule;
+  const f = luxonFormats(useLocale());
   const [open, setOpen] = useState(false);
   const [zone, setZone] = useState(p.zone);
   const [slot, setSlot] = useState<string | null>(null);
@@ -18,7 +23,7 @@ export function Reschedule(p: { token: string; username: string; serviceId: stri
   if (!open) {
     return (
       <button type="button" className={`${btnSecondary} w-full`} onClick={() => setOpen(true)}>
-        Reschedule
+        {t.open}
       </button>
     );
   }
@@ -35,22 +40,22 @@ export function Reschedule(p: { token: string; username: string; serviceId: stri
       router.refresh();
       return;
     }
-    setNotice(data?.error || "Something went wrong. Please try again.");
+    setNotice(data?.error || dict.common.somethingWrong);
     setSlot(null);
     setRefreshKey((k) => k + 1);
   }
 
   return (
     <section aria-labelledby="rs-title" className="space-y-4 border-y border-line py-5">
-      <h2 id="rs-title" className="text-xl font-semibold tracking-tight">Pick a new time</h2>
-      {p.approval && <p className="text-[15px] text-muted">The new time needs approval again. Until then it shows as pending.</p>}
+      <h2 id="rs-title" className="text-xl font-semibold tracking-tight">{t.title}</h2>
+      {p.approval && <p className="text-[15px] text-muted">{t.approvalAgain}</p>}
       <SlotPicker username={p.username} serviceId={p.serviceId} zone={zone} onZoneChange={setZone} horizonDays={p.horizonDays} selected={slot} onSelect={setSlot} manageToken={p.token} notice={notice} refreshKey={refreshKey} />
       <div className="flex flex-col gap-2 sm:flex-row">
-        <button type="button" className={`${btn} flex-1`} disabled={!slot || busy} onClick={save}>
-          {busy ? "Saving…" : slot ? `Move to ${DateTime.fromISO(slot).setZone(zone).toFormat("ccc, LLL d 'at' h:mm a")}` : "Pick a time"}
+        <button type="button" className={`${btn} flex-1 py-2 text-center`} disabled={!slot || busy} onClick={save}>
+          {busy ? t.saving : slot ? t.moveTo(DateTime.fromISO(slot).setZone(zone).setLocale(f.luxon).toFormat(f.dateAtTime)) : t.pickTime}
         </button>
         <button type="button" className={btnSecondary} onClick={() => setOpen(false)}>
-          Keep current time
+          {t.keep}
         </button>
       </div>
     </section>

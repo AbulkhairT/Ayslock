@@ -252,11 +252,19 @@ alter table providers add column if not exists profession text not null default 
 alter table providers add column if not exists listed boolean not null default true;
 create index if not exists providers_display_name_lower_idx on providers (lower(display_name));
 
+-- ===== 20260930000005_locale.sql =====
+-- Language for emails. Providers get emails in the language they use the site in;
+-- clients in the language they booked or asked for access in.
+alter table providers add column if not exists locale text not null default 'en' check (locale in ('en', 'ru'));
+alter table clients add column if not exists locale text not null default 'en' check (locale in ('en', 'ru'));
+alter table access_grants add column if not exists locale text not null default 'en' check (locale in ('en', 'ru'));
+
 insert into schema_migrations (name) values
   ('20260930000001_schema.sql'),
   ('20260930000002_rls.sql'),
   ('20260930000003_lockdown_rls.sql'),
-  ('20260930000004_search.sql')
+  ('20260930000004_search.sql'),
+  ('20260930000005_locale.sql')
 on conflict do nothing;
 
 commit;

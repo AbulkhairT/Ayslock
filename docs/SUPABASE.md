@@ -92,13 +92,13 @@ All times are stored in UTC (`timestamptz`); each provider keeps their IANA time
 
 | Table | Holds | Notable rules |
 | --- | --- | --- |
-| `providers` | One row per provider: `owner_id` (the Supabase Auth user), `username`, name, what they do (`profession`), whether they show up in name search (`listed`), bio, timezone, location, booking mode (`open` / `approval` / `private`), notice, booking window, buffer, how long requests are held, how long private links last | Username is 3 to 30 lowercase letters, digits or `_`, unique regardless of case. One profile per account. |
+| `providers` | One row per provider: `owner_id` (the Supabase Auth user), `username`, name, what they do (`profession`), whether they show up in name search (`listed`), email language (`locale`: `en` or `ru`), bio, timezone, location, booking mode (`open` / `approval` / `private`), notice, booking window, buffer, how long requests are held, how long private links last | Username is 3 to 30 lowercase letters, digits or `_`, unique regardless of case. One profile per account. |
 | `services` | What can be booked: name, description, length in minutes, price in cents, currency, active, order | Length 5 to 720 minutes; price can be empty |
 | `weekly_hours` | Working hours per weekday (1 = Monday) in the provider's local time; several rows per day make breaks | End after start |
 | `availability_exceptions` | Days off or special hours for a date | Empty times = closed all day |
-| `clients` | People who booked: name, email, phone, the provider's private notes | One row per provider and email |
+| `clients` | People who booked: name, email, phone, the language they booked in (`locale`), the provider's private notes | One row per provider and email |
 | `appointments` | Bookings and blocked time: status (`pending`, `confirmed`, `cancelled`, `declined`, `expired`), start, end, end plus buffer, both timezones, client note | **No two live appointments for a provider can overlap**, enforced by the database itself, so two people can't get the same slot even at the same instant. Pending requests must have an expiry. |
-| `access_grants` | Invite-only requests and the private links made from them: status, expiry | Links can be turned off at any time |
+| `access_grants` | Invite-only requests and the private links made from them: status, expiry, the requester's language | Links can be turned off at any time |
 | `notifications` | Every email: who, subject, body, when to send, status, attempts | Each email has a unique key, so nothing is sent twice |
 | `rate_limits` | Counters that slow down abuse of sign-up, log-in, lookups and booking | |
 | `schema_migrations` | Which setup scripts have run | |

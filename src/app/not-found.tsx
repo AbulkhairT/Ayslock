@@ -1,15 +1,21 @@
 import Link from "next/link";
+import { getT } from "@/i18n/server";
+import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { Logo } from "@/components/Logo";
 import { btn } from "@/components/ui";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const t = (await getT()).booking.notFound;
   return (
     <main id="main" className="mx-auto flex min-h-[70dvh] max-w-md flex-col items-center justify-center px-5 text-center">
-      <Logo />
-      <h1 className="mt-8 text-[28px] font-semibold leading-tight tracking-tight">We couldn&apos;t find that page.</h1>
-      <p className="mt-2 text-muted">If you were looking for a provider, check the exact username with them. Ayslock doesn&apos;t list providers publicly.</p>
+      <div className="flex items-center gap-2">
+        <Logo />
+        <LanguageSwitch />
+      </div>
+      <h1 className="mt-8 text-[28px] font-semibold leading-tight tracking-tight">{t.title}</h1>
+      <p className="mt-2 text-muted">{t.body}</p>
       <Link href="/" className={`${btn} mt-6`}>
-        Look up a username
+        {t.lookup}
       </Link>
     </main>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useT } from "@/i18n/client";
 
 export function browserZone() {
   try {
@@ -10,7 +11,8 @@ export function browserZone() {
   }
 }
 
-export function TimezoneSelect({ value, onChange, id = "tz", labelText = "Times shown in" }: { value: string; onChange: (z: string) => void; id?: string; labelText?: string }) {
+export function TimezoneSelect({ value, onChange, id = "tz", labelText }: { value: string; onChange: (z: string) => void; id?: string; labelText?: string }) {
+  const t = useT();
   const zones = useMemo(() => {
     let list: string[] = [];
     try {
@@ -25,7 +27,7 @@ export function TimezoneSelect({ value, onChange, id = "tz", labelText = "Times 
   return (
     <div className="flex flex-wrap items-center gap-2 text-sm">
       <label htmlFor={id} className="text-muted">
-        {labelText}
+        {labelText ?? t.booking.slots.timesShownIn}
       </label>
       <select
         id={id}

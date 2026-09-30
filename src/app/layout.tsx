@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import { I18nProvider } from "@/i18n/client";
+import { getLocale, getT } from "@/i18n/server";
 import { DemoBanner } from "@/components/DemoBanner";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Ayslock",
-  description: "Find your person. Pick a time. You're booked.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: "Ayslock", description: t.common.tagline };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -13,15 +15,19 @@ export const viewport: Viewport = {
   themeColor: "#ffffff",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getLocale();
+  const t = await getT();
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body className="min-h-dvh">
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-white focus:px-4 focus:py-2">
-          Skip to content
+          {t.common.skipToContent}
         </a>
-        <DemoBanner />
-        {children}
+        <I18nProvider locale={locale}>
+          <DemoBanner />
+          {children}
+        </I18nProvider>
       </body>
     </html>
   );

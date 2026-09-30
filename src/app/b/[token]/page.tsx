@@ -6,7 +6,10 @@ import { getDb } from "@/lib/db";
 import { modes } from "@/lib/env";
 import { fmtDate, fmtDuration, fmtTime, fmtZone } from "@/lib/format";
 import { locationLine } from "@/lib/messages";
+import { localizeError } from "@/i18n";
+import { getLocale, getT } from "@/i18n/server";
 import { Avatar } from "@/components/Avatar";
+import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { Logo } from "@/components/Logo";
 import { NoDatabaseNotice, noSharedDatabase } from "@/components/NoDatabase";
 import { Notice } from "@/components/Notice";
@@ -16,15 +19,12 @@ import { cancelBooking } from "./actions";
 import { Reschedule } from "./Reschedule";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Your booking · Ayslock", robots: { index: false, follow: false }, referrer: "no-referrer" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.booking.manage.metaTitle, robots: { index: false, follow: false }, referrer: "no-referrer" };
+}
 
-const STATUS = {
-  confirmed: { title: "You're booked", label: "Confirmed", tone: "ok" as const },
-  pending: { title: "Request sent. Waiting for approval", label: "Awaiting approval", tone: "warn" as const },
-  cancelled: { title: "This booking is cancelled", label: "Cancelled", tone: "bad" as const },
-  declined: { title: "This request wasn't approved", label: "Not approved", tone: "bad" as const },
-  expired: { title: "This request expired", label: "Expired", tone: "bad" as const },
-};
+const TONE = { confirmed: "ok", pending: "warn", cancelled: "bad", declined: "bad", expired: "bad" } as const;
 
 function StatusIcon({ tone }: { tone: "ok" | "warn" | "bad" }) {
   const path = tone === "ok" ? "M5 10.5l3.5 3.5L15 7" : tone === "warn" ? "M10 5.5V10l3 2" : "M6.5 6.5l7 7M13.5 6.5l-7 7";
@@ -38,15 +38,17 @@ function StatusIcon({ tone }: { tone: "ok" | "warn" | "bad" }) {
 export default async function ManagePage({ params, searchParams }: PageProps<"/b/[token]">) {
   const { token } = await params;
   const sp = await searchParams;
+  const locale = await getLocale();
+  const t = (await getT()).booking.manage;
   const m = await appointmentByToken(await getDb(), token);
   if (!m) {
     if (!noSharedDatabase()) notFound();
     return (
       <main id="main" className="mx-auto max-w-xl px-5 pb-16 pt-6">
-        <header className="mb-6"><Logo /></header>
-        <h1 className="mb-4 text-2xl font-semibold tracking-tight">We can&apos;t show this booking</h1>
-        <NoDatabaseNotice what="Your booking was accepted, but this page was served by a different server copy that doesn't have it." />
-        <Link href="/" className="mt-6 inline-block font-semibold text-accent underline">Back to Ayslock</Link>
+        <header className="mb-6 flex items-center justify-between gap-3"><Logo /><LanguageSwitch /></header>
+        <h1 className="mb-4 text-2xl font-semibold tracking-tight">{t.cantShow}</h1>
+        <NoDatabaseNotice what={t.noDbWhat} />
+        <Link href="/" className="mt-6 inline-block font-semibold text-accent underline">{t.backHome}</Link>
       </main>
     );
   }
@@ -55,12 +57,12 @@ export default async function ManagePage({ params, searchParams }: PageProps<"/b
   const start = new Date(a.starts_at);
   const end = new Date(a.ends_at);
   const live = (a.status === "confirmed" || a.status === "pending") && start > new Date();
-  const s = STATUS[a.status];
+  const s = { ...t.status[a.status], tone: TONE[a.status] };
   const duration = Math.round((end.getTime() - start.getTime()) / 60000);
 
   return (
     <main id="main" className="mx-auto max-w-xl px-4 pb-16 sm:px-6">
-      <header className="py-2"><Logo /></header>
+      <header className="flex items-center justify-between gap-3 py-2"><Logo /><LanguageSwitch /></header>
 
       <div className="mt-6">
         <StatusIcon tone={s.tone} />
@@ -68,25 +70,25 @@ export default async function ManagePage({ params, searchParams }: PageProps<"/b
         <h1 className="mt-1 text-[28px] font-semibold leading-tight tracking-tight">{s.title}</h1>
         {a.status === "pending" && a.expires_at && (
           <p className="mt-2 text-[15px] text-muted">
-            {provider.display_name} has until {fmtDate(a.expires_at, zone)} at {fmtTime(a.expires_at, zone)} to approve. The time is held for you until then.
+            {t.pendingUntil(provider.display_name, fmtDate(a.expires_at, zone, locale), fmtTime(a.expires_at, zone, locale))}
           </p>
         )}
       </div>
 
       <div className="mt-5 space-y-2 empty:hidden">
         {sp.new && (modes.email === "resend" ? (
-          <Notice tone="ok">Confirmation sent to {m.client.email}.</Notice>
+          <Notice tone="ok">{t.sentTo(m.client.email)}</Notice>
         ) : modes.auth === "demo" ? (
-          <Notice tone="ok">Demo mode: the confirmation email to {m.client.email} is shown in the <Link className="underline" href="/demo/outbox">notification preview</Link>, not sent.</Notice>
+          <Notice tone="ok">{t.demoBefore(m.client.email)}<Link className="underline" href="/demo/outbox">{t.demoLink}</Link>{t.demoAfter}</Notice>
         ) : (
-          <Notice tone="info">Save this page: it&apos;s your link to change or cancel. Email confirmations aren&apos;t switched on for this site yet.</Notice>
+          <Notice tone="info">{t.savePage}</Notice>
         ))}
-        {sp.moved && <Notice tone="ok">Your new time is saved.</Notice>}
-        {sp.cancelled && <Notice tone="info">Cancelled. {provider.display_name} has been told.</Notice>}
-        {typeof sp.err === "string" && <Notice tone="bad">{sp.err}</Notice>}
+        {sp.moved && <Notice tone="ok">{t.moved}</Notice>}
+        {sp.cancelled && <Notice tone="info">{t.cancelled(provider.display_name)}</Notice>}
+        {typeof sp.err === "string" && <Notice tone="bad">{localizeError(sp.err, locale)}</Notice>}
       </div>
 
-      <section aria-label="Booking details" className="mt-6">
+      <section aria-label={t.details} className="mt-6">
         <div className="flex items-center gap-3 border-t border-line pt-4">
           <Avatar name={provider.display_name} url={provider.avatar_url} size={44} />
           <div className="min-w-0">
@@ -95,29 +97,29 @@ export default async function ManagePage({ params, searchParams }: PageProps<"/b
           </div>
         </div>
         <dl className="mt-3 divide-y divide-line border-y border-line text-[15px]">
-          <Row k="Service" v={`${a.service_name} (${fmtDuration(duration)})`} />
-          <Row k="Date" v={fmtDate(start, zone)} />
-          <Row k="Time" v={`${fmtTime(start, zone)} – ${fmtTime(end, zone)}`} />
-          <Row k="Timezone" v={fmtZone(zone, start)} />
-          <Row k="Where" v={locationLine(provider)} />
-          <Row k="Booked for" v={`${m.client.name}`} />
+          <Row k={t.service} v={`${a.service_name} (${fmtDuration(duration, locale)})`} />
+          <Row k={t.date} v={fmtDate(start, zone, locale)} />
+          <Row k={t.time} v={`${fmtTime(start, zone, locale)} – ${fmtTime(end, zone, locale)}`} />
+          <Row k={t.timezone} v={fmtZone(zone, start)} />
+          <Row k={t.where} v={locationLine(provider, locale)} />
+          <Row k={t.bookedFor} v={`${m.client.name}`} />
         </dl>
       </section>
 
       {live && (
         <div className="mt-6 space-y-3">
           <a href={`/b/${token}/ics`} className={`${btnSecondary} w-full`}>
-            Add to calendar
+            {t.addToCalendar}
           </a>
           {service && service.active && (
             <Reschedule token={token} username={provider.username} serviceId={service.id} zone={zone} horizonDays={provider.horizon_days} approval={provider.access_mode === "approval"} />
           )}
           <details className="group">
-            <summary className="inline-flex min-h-11 cursor-pointer items-center font-medium text-bad">Cancel booking</summary>
+            <summary className="inline-flex min-h-11 cursor-pointer items-center font-medium text-bad">{t.cancel}</summary>
             <form action={cancelBooking} className="mt-2 rounded-xl bg-bad-soft p-4">
               <input type="hidden" name="token" value={token} />
-              <p className="mb-3 text-[15px] text-bad">{provider.display_name} will be told. This can&apos;t be undone.</p>
-              <button type="submit" className={`${btnDanger} w-full`}>Yes, cancel it</button>
+              <p className="mb-3 text-[15px] text-bad">{t.cancelWarn(provider.display_name)}</p>
+              <button type="submit" className={`${btnDanger} w-full`}>{t.cancelYes}</button>
             </form>
           </details>
         </div>
@@ -125,15 +127,15 @@ export default async function ManagePage({ params, searchParams }: PageProps<"/b
 
       {!live && (a.status === "cancelled" || a.status === "declined" || a.status === "expired") && (
         <Link href={`/u/${provider.username}`} className={`${btn} mt-6 w-full`}>
-          Book another time
+          {t.bookAnother}
         </Link>
       )}
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
-        <p className="text-[15px] text-muted">Coming back? Keep {provider.display_name.split(" ")[0]} handy.</p>
+        <p className="text-[15px] text-muted">{t.comingBack(provider.display_name.split(" ")[0])}</p>
         <SaveProviderButton provider={{ username: provider.username, display_name: provider.display_name }} className="min-h-11 rounded-xl px-3 text-[15px] font-medium text-accent hover:bg-accent-soft aria-pressed:text-ok" />
       </div>
-      <p className="mt-6 text-sm text-muted">This page is your private link to manage the booking. Don&apos;t share it.</p>
+      <p className="mt-6 text-sm text-muted">{t.privateNote}</p>
     </main>
   );
 }

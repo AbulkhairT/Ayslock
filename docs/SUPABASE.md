@@ -24,6 +24,8 @@ When everything is connected, the yellow "Demo mode" bar at the top of the site 
 - `DATABASE_URL`: Supabase → **Connect** (top bar) → **Connection string** → **Transaction pooler** (port 6543). Replace `[YOUR-PASSWORD]`. Don't use the "Direct connection": it's IPv6 only and Vercel can't reach it.
 - `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase → Project Settings → **API**.
 
+If the integration asked for a prefix (for example `STORAGE_`), that's fine: the app also reads `STORAGE_POSTGRES_URL`, `STORAGE_SUPABASE_URL` and so on.
+
 > If you connected **Neon** earlier, disconnect it (Vercel → Storage) or delete its `DATABASE_URL`. `DATABASE_URL` wins over `POSTGRES_URL`, so a leftover Neon URL would keep the app on Neon.
 
 ## 3. Create the tables
@@ -74,10 +76,11 @@ Without it, everything else works; there are just no 24-hour reminders. Expired 
 
 ## 8. Check it works
 
-1. Open the site: the yellow demo bar is gone.
-2. Claim a username on the home page → create an account → confirm from the email → finish setup.
-3. In a private window, open `/@yourname`, book a time with your own email. You get the confirmation, and the provider email gets "New booking".
-4. In Supabase → **Table Editor** you'll see the provider, service, client and appointment rows.
+1. Open `https://YOUR-DOMAIN/api/status`. It shows which variable each part is using (names only, never values), whether the database answers, and whether sign-in and email are real or simulated.
+2. Open the site: the yellow demo bar is gone.
+3. Claim a username on the home page → create an account → confirm from the email → finish setup.
+4. In a private window, open `/@yourname`, book a time with your own email. You get the confirmation, and the provider email gets "New booking".
+5. In Supabase → **Table Editor** you'll see the provider, service, client and appointment rows.
 
 Demo accounts (@marco, @lena, @sofia) only exist in demo mode; the live site starts empty.
 

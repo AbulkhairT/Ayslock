@@ -74,7 +74,13 @@ export default async function ManagePage({ params, searchParams }: PageProps<"/b
       </div>
 
       <div className="mt-5 space-y-2 empty:hidden">
-        {sp.new && <Notice tone="ok">{modes.email === "preview" ? <>Demo mode: the confirmation email to {m.client.email} is shown in the <Link className="underline" href="/demo/outbox">notification preview</Link>, not sent.</> : <>Confirmation sent to {m.client.email}.</>}</Notice>}
+        {sp.new && (modes.email === "resend" ? (
+          <Notice tone="ok">Confirmation sent to {m.client.email}.</Notice>
+        ) : modes.auth === "demo" ? (
+          <Notice tone="ok">Demo mode: the confirmation email to {m.client.email} is shown in the <Link className="underline" href="/demo/outbox">notification preview</Link>, not sent.</Notice>
+        ) : (
+          <Notice tone="info">Save this page: it&apos;s your link to change or cancel. Email confirmations aren&apos;t switched on for this site yet.</Notice>
+        ))}
         {sp.moved && <Notice tone="ok">Your new time is saved.</Notice>}
         {sp.cancelled && <Notice tone="info">Cancelled. {provider.display_name} has been told.</Notice>}
         {typeof sp.err === "string" && <Notice tone="bad">{sp.err}</Notice>}

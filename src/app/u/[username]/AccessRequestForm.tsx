@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { btn, input, label, textarea } from "@/components/ui";
 
-export function AccessRequestForm({ username, displayName, invalidLink }: { username: string; displayName: string; invalidLink: boolean }) {
+export function AccessRequestForm({ username, displayName, invalidLink, emailOn = true }: { username: string; displayName: string; invalidLink: boolean; emailOn?: boolean }) {
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +26,7 @@ export function AccessRequestForm({ username, displayName, invalidLink }: { user
     return (
       <section className="border-y border-line py-8" aria-live="polite">
         <h2 className="text-xl font-semibold tracking-tight">Request sent</h2>
-        <p className="mt-1 text-muted">If {displayName} approves it, you&apos;ll get an email with a private link to book.</p>
+        <p className="mt-1 text-muted">{emailOn ? <>If {displayName} approves it, you&apos;ll get an email with a private link to book.</> : <>If {displayName} approves it, they&apos;ll send you a private link to book.</>}</p>
       </section>
     );
   }
@@ -34,7 +34,7 @@ export function AccessRequestForm({ username, displayName, invalidLink }: { user
   return (
     <section aria-labelledby="access-title">
       <h2 id="access-title" className="text-xl font-semibold tracking-tight">Ask to book</h2>
-      <p className="mt-1 text-[15px] text-muted">{displayName} shares available times by invitation. Send a quick request and you&apos;ll get a private booking link by email once approved.</p>
+      <p className="mt-1 text-[15px] text-muted">{displayName} shares available times by invitation. Send a quick request and you&apos;ll get a private booking link once approved.</p>
       {invalidLink && (
         <p role="alert" className="mt-4 rounded-xl bg-warn-soft px-4 py-3 text-[15px] text-warn">
           That booking link has expired or was turned off. You can ask for a new one below.

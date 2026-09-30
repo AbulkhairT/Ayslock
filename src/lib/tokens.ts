@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { demoStorage } from "./demo-storage";
+import { env } from "./env";
 
 // Links are signed, not stored: <record id>.<HMAC(purpose:id:version)>. They are
 // unguessable (192-bit MAC), scoped to one record and one purpose, and revocable by
@@ -14,7 +15,7 @@ function secret(): string {
   if (cachedSecret) return cachedSecret;
   const fromEnv = process.env.APP_SECRET;
   if (fromEnv && fromEnv.length >= 32) return (cachedSecret = fromEnv);
-  const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  const dbUrl = env.databaseUrl;
   if (dbUrl) {
     // Every server instance must sign links the same way. Without APP_SECRET, derive a key
     // from the database credentials: anyone holding them could read the data anyway.

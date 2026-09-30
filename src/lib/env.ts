@@ -1,10 +1,34 @@
 // Which backends are real and which are simulated. Every simulated part is labeled in the UI.
+
+/**
+ * Read the first variable that is set, by exact name or with any prefix. Vercel's storage
+ * integrations (Supabase, Neon) let you pick a prefix, so POSTGRES_URL can arrive as
+ * STORAGE_POSTGRES_URL or SUPABASE_POSTGRES_URL. Returns the value and the name it came from.
+ */
+function pick(names: string[]): { value: string; from: string | null } {
+  const all = process.env;
+  for (const n of names) if (all[n]) return { value: all[n]!, from: n };
+  const keys = Object.keys(all).sort();
+  for (const n of names) {
+    const k = keys.find((key) => key.endsWith(`_${n}`) && all[key]);
+    if (k) return { value: all[k]!, from: k };
+  }
+  return { value: "", from: null };
+}
+
+// Pooled connection strings first; the unpooled ones still work, just with fewer connections to spare.
+const db = pick(["DATABASE_URL", "POSTGRES_URL", "SUPABASE_DB_URL", "DATABASE_URL_UNPOOLED", "POSTGRES_URL_NON_POOLING"]);
+const sbUrl = pick(["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_URL"]);
+// Older projects call it the anon key; newer ones (and the Vercel integration) the publishable key.
+const sbKey = pick(["NEXT_PUBLIC_SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "SUPABASE_ANON_KEY", "SUPABASE_PUBLISHABLE_KEY"]);
+
+/** Names (never values) of the variables in use, for the status endpoint. */
+export const envSources = { database: db.from, supabaseUrl: sbUrl.from, supabaseKey: sbKey.from };
+
 export const env = {
-  // Vercel's Postgres/Neon integration sets POSTGRES_URL; Supabase gives you DATABASE_URL.
-  databaseUrl: process.env.DATABASE_URL || process.env.POSTGRES_URL || "",
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  // Older projects call it the anon key; newer ones (and the Vercel integration) the publishable key.
-  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "",
+  databaseUrl: db.value,
+  supabaseUrl: sbUrl.value,
+  supabaseAnonKey: sbKey.value,
   resendApiKey: process.env.RESEND_API_KEY || "",
   emailFrom: process.env.EMAIL_FROM || "",
   // On Vercel without APP_URL, use the project's production domain (set by Vercel itself).

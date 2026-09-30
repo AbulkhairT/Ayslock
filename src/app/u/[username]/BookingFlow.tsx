@@ -26,6 +26,7 @@ interface Props {
   horizonDays: number;
   services: ServiceView[];
   accessToken?: string | null;
+  emailOn?: boolean;
 }
 
 type Step = "service" | "time" | "details";
@@ -208,7 +209,7 @@ export function BookingFlow(p: Props) {
           <div>
             <label htmlFor="email" className={label}>Email</label>
             <input id="email" name="email" type="email" required autoComplete="email" inputMode="email" className={input} maxLength={200} aria-describedby="email-hint" />
-            <p id="email-hint" className={hint}>We send your confirmation and a link to change the booking.</p>
+            <p id="email-hint" className={hint}>{p.emailOn === false ? `So ${p.displayName.split(" ")[0]} can reach you about the booking.` : "We send your confirmation and a link to change the booking."}</p>
           </div>
           <div>
             <label htmlFor="phone" className={label}>Phone <span className="font-normal text-muted">(optional)</span></label>

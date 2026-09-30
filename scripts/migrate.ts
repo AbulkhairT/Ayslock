@@ -1,8 +1,9 @@
 // Apply supabase/migrations/*.sql to DATABASE_URL (skip if you use `supabase db push`).
 import { migrate, openDb } from "../src/lib/db";
+import { env } from "../src/lib/env";
 
 (async () => {
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  const url = env.databaseUrl;
   if (!url) throw new Error("Set DATABASE_URL (or POSTGRES_URL).");
   const db = await openDb({ kind: "postgres", url, autoMigrate: false });
   const onSupabase = process.argv.includes("--supabase");

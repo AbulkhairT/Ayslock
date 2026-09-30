@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { verifyAccess } from "@/lib/access";
 import { getDb } from "@/lib/db";
+import { modes } from "@/lib/env";
 import { fmtDate, fmtDuration, fmtPrice } from "@/lib/format";
 import { locationLine } from "@/lib/messages";
 import { providerByUsername, servicesFor } from "@/lib/providers";
@@ -41,6 +42,8 @@ export default async function ProviderPage({ params, searchParams }: PageProps<"
   const location = locationLine(provider);
 
   const first = provider.display_name.split(" ")[0];
+  // Demo mode previews emails on screen, so the wording about email still holds there.
+  const emailOn = modes.email === "resend" || modes.auth === "demo";
 
   return (
     <main id="main" className="mx-auto max-w-2xl px-4 pb-16 sm:px-6">
@@ -67,7 +70,7 @@ export default async function ProviderPage({ params, searchParams }: PageProps<"
 
       <div className="mt-6 space-y-2">
         {provider.access_mode === "approval" && (
-          <Notice tone="info">{first} approves each booking. You&apos;ll get an email when it&apos;s confirmed.</Notice>
+          <Notice tone="info">{first} approves each booking. {emailOn ? <>You&apos;ll get an email when it&apos;s confirmed.</> : <>Your booking page shows when it&apos;s confirmed.</>}</Notice>
         )}
         {grant && (
           <Notice tone="ok">Private booking link for {grant.name}. Valid until {fmtDate(grant.expires_at!, provider.timezone)}.</Notice>
@@ -87,6 +90,7 @@ export default async function ProviderPage({ params, searchParams }: PageProps<"
             pendingHours={provider.pending_expiry_hours}
             horizonDays={provider.horizon_days}
             accessToken={grant ? k : null}
+            emailOn={emailOn}
             services={services.map((s) => ({
               id: s.id,
               name: s.name,
@@ -112,7 +116,7 @@ export default async function ProviderPage({ params, searchParams }: PageProps<"
                 ))}
               </ul>
             </section>
-            <AccessRequestForm username={provider.username} displayName={provider.display_name} invalidLink={!!k} />
+            <AccessRequestForm username={provider.username} displayName={provider.display_name} invalidLink={!!k} emailOn={emailOn} />
           </div>
         )}
       </div>

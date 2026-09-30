@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { getDb } from "./db";
-import { modes } from "./env";
+import { env, modes } from "./env";
 import { checkPassword, hashPassword } from "./password";
 import { rateLimit } from "./ratelimit";
 import { supabaseServer } from "./supabase/server";
@@ -51,7 +51,7 @@ export async function currentUser(): Promise<User | null> {
 
 export type AuthResult = { ok: true; confirmEmail?: boolean } | { ok: false; error: string };
 
-export async function signUp(email: string, password: string, ip: string): Promise<AuthResult> {
+export async function signUp(email: string, password: string, ip: string, next = "/onboarding"): Promise<AuthResult> {
   email = email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Please enter a valid email." };
   if (password.length < 8) return { ok: false, error: "Use a password with at least 8 characters." };
@@ -63,12 +63,15 @@ export async function signUp(email: string, password: string, ip: string): Promi
   }
   if (modes.auth === "supabase") {
     const supabase = await supabaseServer();
-    const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${process.env.APP_URL ?? ""}/auth/callback` } });
-    if (error) return { ok: false, error: error.message };
+    // The confirmation email links back here, then on to setup (with the claimed username).
+    const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${env.appUrl}/auth/callback?next=${encodeURIComponent(next)}` } });
+    if (error) return { ok: false, error: error.code === "user_already_exists" ? "An account with this email already exists. Try logging in." : error.message };
+    // With email confirmation on, Supabase hides existing accounts by returning a user with no identities.
+    if (!data.session && data.user && data.user.identities?.length === 0) return { ok: false, error: "An account with this email already exists. Try logging in." };
     return { ok: true, confirmEmail: !data.session };
   }
   const id = await demoCreateUser(email, password);
-  if (!id) return { ok: false, error: "An account with this email already exists. Try signing in." };
+  if (!id) return { ok: false, error: "An account with this email already exists. Try logging in." };
   await demoStartSession(id);
   return { ok: true };
 }
@@ -84,6 +87,7 @@ export async function signIn(email: string, password: string, ip: string): Promi
   if (modes.auth === "supabase") {
     const supabase = await supabaseServer();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error?.code === "email_not_confirmed") return { ok: false, error: "Confirm your email first. Check your inbox for the link we sent." };
     return error ? { ok: false, error: "That email and password don't match." } : { ok: true };
   }
   const rows = await db.query<{ id: string; password_hash: string }>(`select id, password_hash from demo_users where email = $1`, [email]);

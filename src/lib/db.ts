@@ -102,8 +102,9 @@ async function createPglite(dataDir: string): Promise<Db> {
 export function poolConfig(url: string) {
   const u = new URL(url);
   const local = ["localhost", "127.0.0.1", "::1"].includes(u.hostname) || u.searchParams.get("sslmode") === "disable";
-  u.searchParams.delete("sslmode");
-  u.searchParams.delete("sslrootcert");
+  // Drop options meant for other clients (the Supabase/Vercel integration adds some) so
+  // node-postgres only sees what it understands.
+  for (const k of ["sslmode", "sslrootcert", "supa", "pgbouncer", "connection_limit", "pool_timeout"]) u.searchParams.delete(k);
   return {
     connectionString: u.toString(),
     ssl: local ? undefined : { rejectUnauthorized: process.env.PGSSL_STRICT === "1" },

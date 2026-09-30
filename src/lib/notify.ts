@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import type { Db, Queryable } from "./db";
 import { env, modes } from "./env";
 
@@ -72,7 +73,8 @@ interface ClaimedRow {
 export type Sender = (n: ClaimedRow) => Promise<"sent" | "previewed">;
 
 async function resendSender(n: ClaimedRow): Promise<"sent"> {
-  const res = await fetch("https://api.resend.com/emails", {
+  // RESEND_API_URL only exists so delivery can be tested against a local stand-in.
+  const res = await fetch(`${process.env.RESEND_API_URL || "https://api.resend.com"}/emails`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${env.resendApiKey}`,
@@ -96,6 +98,23 @@ export function defaultSender(): Sender {
  * Deliver due notifications. Safe to run from several workers at once: rows are claimed
  * with SKIP LOCKED and leased, and reminders are re-checked against the live appointment.
  */
+/**
+ * Send whatever is due once the current response is finished. On serverless hosts a
+ * plain fire-and-forget promise can be frozen with the function; after() keeps it alive.
+ * Outside a request (tests, scripts) it just runs in the background.
+ */
+export function sendSoon(db: Db) {
+  const run = () => processDue(db).then(
+    () => undefined,
+    (e) => console.error("notification worker", e),
+  );
+  try {
+    after(run);
+  } catch {
+    void run();
+  }
+}
+
 export async function processDue(db: Db, opts: { limit?: number; sender?: Sender } = {}) {
   const sender = opts.sender ?? defaultSender();
   const claimed = await db.tx((q) =>

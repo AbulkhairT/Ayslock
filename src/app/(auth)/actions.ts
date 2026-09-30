@@ -13,12 +13,13 @@ export interface AuthState {
 
 export async function signUpAction(_: AuthState, form: FormData): Promise<AuthState> {
   const email = String(form.get("email") ?? "");
-  const r = await signUp(email, String(form.get("password") ?? ""), await clientIp());
-  if (!r.ok) return { error: r.error, email };
-  if (r.confirmEmail) return { info: "Check your email to confirm your account, then log in.", email };
-  // Carry the username claimed on the home page into setup.
+  // Carry the username claimed on the home page into setup, also through email confirmation.
   const claimed = normalizeUsername(String(form.get("username") ?? ""));
-  redirect(claimed ? `/onboarding?u=${claimed}` : "/onboarding");
+  const next = claimed ? `/onboarding?u=${claimed}` : "/onboarding";
+  const r = await signUp(email, String(form.get("password") ?? ""), await clientIp(), next);
+  if (!r.ok) return { error: r.error, email };
+  if (r.confirmEmail) return { info: `We sent a link to ${email}. Open it on this device to confirm your account and finish setting up.`, email };
+  redirect(next);
 }
 
 export async function signInAction(_: AuthState, form: FormData): Promise<AuthState> {

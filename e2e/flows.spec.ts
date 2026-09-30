@@ -79,7 +79,8 @@ test("open booking end to end, then reschedule, calendar file and cancel", async
   await page.getByRole("button", { name: "Reschedule" }).click();
   const times = page.getByRole("group").getByRole("button");
   await expect(times.first()).toBeVisible();
-  await times.nth(2).click();
+  // Late in the day only one or two times may be left, so take the last one shown.
+  await times.last().click();
   await page.getByRole("button", { name: /^Move to/ }).click();
   await expect(page.getByText("Your new time is saved.")).toBeVisible();
 

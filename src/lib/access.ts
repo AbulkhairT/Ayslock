@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { getDb, type Queryable } from "./db";
 import { emails, accessUrl } from "./messages";
-import { enqueue, processDue } from "./notify";
+import { enqueue, sendSoon } from "./notify";
 import { providerByUsername } from "./providers";
 import { rateLimit } from "./ratelimit";
 import { signToken, tokenRecordId, verifyToken } from "./tokens";
@@ -59,7 +59,7 @@ export async function requestAccess(raw: unknown, ctx: { ip?: string } = {}) {
     );
     await enqueue(q, { providerId: provider.id, accessGrantId: g.id, kind: "access_requested", to: provider.email, ...emails.accessRequested(provider, input.name, input.email, input.message || ""), dedupeKey: `access_requested:${g.id}` });
   });
-  processDue(db).catch(() => {});
+  sendSoon(db);
 }
 
 export async function listAccessGrants(q: Queryable, provider: Provider) {
@@ -88,7 +88,7 @@ export async function approveAccess(provider: Provider, grantId: string) {
     await enqueue(q, { providerId: provider.id, accessGrantId: g.id, kind: "access_approved", to: g.email, ...emails.accessApproved(provider, g.name, link, new Date(g.expires_at!)), dedupeKey: `access_approved:${g.id}` });
     return link;
   });
-  processDue(db).catch(() => {});
+  sendSoon(db);
   return link;
 }
 
@@ -103,7 +103,7 @@ export async function declineAccess(provider: Provider, grantId: string) {
     if (!g) throw new Error("This request was already handled.");
     await enqueue(q, { providerId: provider.id, accessGrantId: g.id, kind: "access_declined", to: g.email, ...emails.accessDeclined(provider, g.name), dedupeKey: `access_declined:${g.id}` });
   });
-  processDue(db).catch(() => {});
+  sendSoon(db);
 }
 
 export async function revokeAccess(provider: Provider, grantId: string) {

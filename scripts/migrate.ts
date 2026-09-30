@@ -2,8 +2,8 @@
 import { migrate, openDb } from "../src/lib/db";
 
 (async () => {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("Set DATABASE_URL.");
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (!url) throw new Error("Set DATABASE_URL (or POSTGRES_URL).");
   const db = await openDb({ kind: "postgres", url, autoMigrate: false });
   const onSupabase = process.argv.includes("--supabase");
   await migrate(db, { includeDemo: process.argv.includes("--demo-auth"), includeSupabase: onSupabase ? true : "auto" });

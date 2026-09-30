@@ -79,13 +79,15 @@ You can also create a new provider at `/signup`.
 
 ## Setup for production (Supabase + Resend)
 
+**Step-by-step guide for Vercel, with a schema overview: [docs/SUPABASE.md](docs/SUPABASE.md).** The single-file schema for the Supabase SQL editor is [`supabase/schema.sql`](supabase/schema.sql) (regenerate with `npm run db:schema`). The notes below are the short version.
+
 1. **Create a Supabase project.** Copy `.env.example` to `.env.local` and fill in:
-   - `DATABASE_URL`: the Postgres connection string (Project Settings → Database).
-   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Project Settings → API.
+   - `DATABASE_URL` (or `POSTGRES_URL`, as the Vercel Supabase integration sets it): the Postgres connection string. On Vercel use the **Transaction pooler** (port 6543).
+   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`): Project Settings → API.
    - `APP_SECRET`: `openssl rand -hex 32`. It signs manage and access links; changing it invalidates every link already sent.
    - `APP_URL`: your public URL.
-2. **Migrations** run automatically on first start, including the row level security policies when the database is a Supabase project. You can also apply them yourself with the Supabase CLI (`supabase db push`) or `DATABASE_URL=… npm run db:migrate`. The app recognizes a schema created either way. On Vercel, use Supabase's **Session pooler** connection string: the direct one is IPv6-only.
-3. **Auth:** in Supabase → Authentication → URL configuration, set the site URL to `APP_URL` and add `APP_URL/auth/callback` as a redirect URL. If email confirmation is on, new providers confirm their email before onboarding.
+2. **Migrations** run automatically on first start, including the row level security policies when the database is a Supabase project. You can also apply them yourself with the Supabase CLI (`supabase db push`) or `DATABASE_URL=… npm run db:migrate`. The app recognizes a schema created either way. On Vercel, use Supabase's pooler connection string: the direct one is IPv6-only.
+3. **Auth:** in Supabase → Authentication → URL configuration, set the site URL to `APP_URL` and add `APP_URL/auth/callback` as a redirect URL. If email confirmation is on, new providers confirm their email before onboarding. Set up custom SMTP (Resend works) in Supabase Auth, because the built-in mailer only reaches your own team.
 4. **Email:** create a [Resend](https://resend.com) API key and verified sending domain, then set `RESEND_API_KEY` and `EMAIL_FROM`.
 5. **Background job (needed for automatic reminders):** the repo ships no schedule, so it deploys on any host, including Vercel Hobby. Confirmations and other emails are attempted right after each booking change, but 24-hour reminders, and anything still queued (such as retries after a failed send), only go out when something calls the job. Set `CRON_SECRET`, then have an external scheduler call `GET /api/cron/notifications` with `Authorization: Bearer $CRON_SECRET` every 5 minutes. Until that's set up, no reminders are sent. Options:
    - A free external cron service (for example cron-job.org or a GitHub Actions `schedule` workflow) calling the URL with the header.

@@ -3,7 +3,8 @@ export const env = {
   // Vercel's Postgres/Neon integration sets POSTGRES_URL; Supabase gives you DATABASE_URL.
   databaseUrl: process.env.DATABASE_URL || process.env.POSTGRES_URL || "",
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+  // Older projects call it the anon key; newer ones (and the Vercel integration) the publishable key.
+  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "",
   resendApiKey: process.env.RESEND_API_KEY || "",
   emailFrom: process.env.EMAIL_FROM || "",
   // On Vercel without APP_URL, use the project's production domain (set by Vercel itself).

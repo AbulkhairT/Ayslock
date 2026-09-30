@@ -5,18 +5,25 @@ import { modes } from "@/lib/env";
 import { DEMO_PASSWORD, DEMO_PROVIDERS } from "@/lib/seed";
 import { Logo } from "@/components/Logo";
 import { NoDatabaseNotice } from "@/components/NoDatabase";
+import { Notice } from "@/components/Notice";
 import { signInAction } from "../actions";
 import { AuthForm } from "../AuthForm";
 
 export const metadata = { title: "Log in · Ayslock" };
 
-export default async function SignIn() {
+export default async function SignIn({ searchParams }: PageProps<"/signin">) {
+  const err = (await searchParams).err;
   if (await currentUser()) redirect("/dashboard");
   return (
     <main id="main" className="mx-auto max-w-md px-4 pb-16 pt-2 sm:px-6">
       <Logo />
       <NoDatabaseNotice className="mt-6" what="Sign-ins can drop out right after you log in." />
       <h1 className="mt-10 text-[28px] font-semibold leading-tight tracking-tight">Log in to your page</h1>
+      {err === "link" && (
+        <div className="mt-6">
+          <Notice tone="bad">That confirmation link didn&apos;t work. It may have expired or been opened in a different browser. Log in to continue.</Notice>
+        </div>
+      )}
       <div className="mt-8">
         <AuthForm action={signInAction} submitLabel="Log in" />
       </div>

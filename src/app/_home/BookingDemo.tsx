@@ -30,7 +30,7 @@ function Scene({ step }: { step: number }) {
         <div className="mt-2 flex gap-2">
           <div className="flex h-12 flex-1 items-center rounded-xl border border-accent px-3 text-lg ring-2 ring-accent/20">
             <span className="text-muted">@</span>
-            <span className="ays-type" style={{ width: "5ch" }}>marco</span>
+            <span className="ays-type">marco</span>
             <span className="ml-px h-6 w-px animate-pulse bg-ink motion-reduce:hidden" />
           </div>
           <span className="ays-press grid h-12 place-items-center rounded-xl bg-accent px-4 font-semibold text-white">Find</span>

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { getDb, pgCode, type Db, type Queryable } from "./db";
 import { isSlotAvailable } from "./availability";
 import { emails } from "./messages";
-import { cancelReminders, enqueue, processDue, scheduleReminder } from "./notify";
+import { cancelReminders, enqueue, scheduleReminder, sendSoon } from "./notify";
 import { providerById, providerByUsername } from "./providers";
 import { rateLimit } from "./ratelimit";
 import { signToken, tokenRecordId, verifyToken } from "./tokens";
@@ -74,9 +74,9 @@ async function upsertClient(q: Queryable, providerId: string, c: { name: string;
   return rows[0].id;
 }
 
-/** Kick the notification worker after a write, so demo previews and near-term emails go out promptly. */
+/** Kick the notification worker after a write, so confirmations go out right away. */
 function kick(db: Db) {
-  processDue(db).catch((e) => console.error("notification worker", e));
+  sendSoon(db);
 }
 
 const uuid = z.string().uuid();

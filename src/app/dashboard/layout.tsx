@@ -7,15 +7,16 @@ import { DashNav } from "./DashNav";
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   const provider = await requireProvider();
   return (
-    <div className="mx-auto max-w-4xl px-4 pb-24 pt-4 sm:px-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+    <div className="mx-auto max-w-3xl px-4 pb-24 sm:px-6">
+      <header className="flex items-center justify-between gap-2 py-2">
         <Logo />
-        <div className="flex items-center gap-1">
-          <Link href={`/u/${provider.username}`} className="min-h-11 rounded-full px-3 py-2.5 text-sm font-semibold text-accent" target="_blank">
-            @{provider.username} ↗
+        <div className="flex min-w-0 items-center text-[15px]">
+          <Link href={`/u/${provider.username}`} className="inline-flex min-h-11 min-w-0 items-center px-2 text-accent hover:underline sm:px-3" target="_blank">
+            <span className="truncate">@{provider.username}</span>
+            <span className="sr-only"> (your booking page, opens in a new tab)</span>
           </Link>
           <form action={signOutAction}>
-            <button type="submit" className="min-h-11 rounded-full px-3 text-sm font-semibold text-muted hover:text-ink">Log out</button>
+            <button type="submit" className="inline-flex min-h-11 items-center px-2 text-muted hover:text-ink sm:px-3">Log out</button>
           </form>
         </div>
       </header>

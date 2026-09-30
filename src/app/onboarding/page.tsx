@@ -13,9 +13,9 @@ export default async function Onboarding({ searchParams }: PageProps<"/onboardin
   const user = await requireUser();
   if (await providerByOwner(await getDb(), user.id)) redirect("/dashboard");
   return (
-    <main id="main" className="mx-auto max-w-xl px-5 pb-16 pt-6">
+    <main id="main" className="mx-auto max-w-xl px-4 pb-16 pt-2 sm:px-6">
       <Logo />
-      <h1 className="mt-12 text-4xl font-semibold tracking-tight">Set up your page</h1>
+      <h1 className="mt-10 text-[28px] font-semibold leading-tight tracking-tight">Set up your page</h1>
       <p className="mb-8 mt-3 text-lg text-muted">Three quick steps. You can change everything later.</p>
       <OnboardingForm appHost={env.appUrl.replace(/^https?:\/\//, "")} initialUsername={typeof u === "string" ? u.slice(0, 31) : ""} />
     </main>

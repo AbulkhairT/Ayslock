@@ -11,7 +11,7 @@ import { Logo } from "@/components/Logo";
 import { NoDatabaseNotice, noSharedDatabase } from "@/components/NoDatabase";
 import { Notice } from "@/components/Notice";
 import { SaveProviderButton } from "@/components/SavedProviders";
-import { btnDanger, btnSecondary } from "@/components/ui";
+import { btn, btnDanger, btnSecondary } from "@/components/ui";
 import { cancelBooking } from "./actions";
 import { Reschedule } from "./Reschedule";
 
@@ -19,12 +19,21 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Your booking · Ayslock", robots: { index: false, follow: false }, referrer: "no-referrer" };
 
 const STATUS = {
-  confirmed: { title: "You're booked", tone: "ok" as const, icon: "✓" },
-  pending: { title: "Request sent. Waiting for approval", tone: "warn" as const, icon: "…" },
-  cancelled: { title: "This booking is cancelled", tone: "bad" as const, icon: "×" },
-  declined: { title: "This request wasn't approved", tone: "bad" as const, icon: "×" },
-  expired: { title: "This request expired", tone: "bad" as const, icon: "×" },
+  confirmed: { title: "You're booked", label: "Confirmed", tone: "ok" as const },
+  pending: { title: "Request sent. Waiting for approval", label: "Awaiting approval", tone: "warn" as const },
+  cancelled: { title: "This booking is cancelled", label: "Cancelled", tone: "bad" as const },
+  declined: { title: "This request wasn't approved", label: "Not approved", tone: "bad" as const },
+  expired: { title: "This request expired", label: "Expired", tone: "bad" as const },
 };
+
+function StatusIcon({ tone }: { tone: "ok" | "warn" | "bad" }) {
+  const path = tone === "ok" ? "M5 10.5l3.5 3.5L15 7" : tone === "warn" ? "M10 5.5V10l3 2" : "M6.5 6.5l7 7M13.5 6.5l-7 7";
+  return (
+    <span aria-hidden className={`grid h-12 w-12 place-items-center rounded-full ${tone === "ok" ? "bg-ok-soft text-ok" : tone === "warn" ? "bg-warn-soft text-warn" : "bg-bad-soft text-bad"}`}>
+      <svg viewBox="0 0 20 20" className="h-6 w-6"><path d={path} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    </span>
+  );
+}
 
 export default async function ManagePage({ params, searchParams }: PageProps<"/b/[token]">) {
   const { token } = await params;
@@ -35,7 +44,7 @@ export default async function ManagePage({ params, searchParams }: PageProps<"/b
     return (
       <main id="main" className="mx-auto max-w-xl px-5 pb-16 pt-6">
         <header className="mb-6"><Logo /></header>
-        <h1 className="mb-4 text-2xl font-bold tracking-tight">We can&apos;t show this booking</h1>
+        <h1 className="mb-4 text-2xl font-semibold tracking-tight">We can&apos;t show this booking</h1>
         <NoDatabaseNotice what="Your booking was accepted, but this page was served by a different server copy that doesn't have it." />
         <Link href="/" className="mt-6 inline-block font-semibold text-accent underline">Back to Ayslock</Link>
       </main>
@@ -50,35 +59,36 @@ export default async function ManagePage({ params, searchParams }: PageProps<"/b
   const duration = Math.round((end.getTime() - start.getTime()) / 60000);
 
   return (
-    <main id="main" className="mx-auto max-w-xl px-5 pb-16 pt-6">
-      <header className="mb-6"><Logo /></header>
+    <main id="main" className="mx-auto max-w-xl px-4 pb-16 sm:px-6">
+      <header className="py-2"><Logo /></header>
 
-      <div className="mb-5 text-center">
-        <span aria-hidden className={`mx-auto grid h-14 w-14 place-items-center rounded-full text-2xl font-bold ${s.tone === "ok" ? "bg-ok-soft text-ok" : s.tone === "warn" ? "bg-warn-soft text-warn" : "bg-bad-soft text-bad"}`}>{s.icon}</span>
-        <h1 className="mt-3 text-2xl font-bold tracking-tight">{s.title}</h1>
+      <div className="mt-6">
+        <StatusIcon tone={s.tone} />
+        <p className={`mt-4 text-[13px] font-semibold uppercase tracking-wide ${s.tone === "ok" ? "text-ok" : s.tone === "warn" ? "text-warn" : "text-bad"}`}>{s.label}</p>
+        <h1 className="mt-1 text-[28px] font-semibold leading-tight tracking-tight">{s.title}</h1>
         {a.status === "pending" && a.expires_at && (
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-2 text-[15px] text-muted">
             {provider.display_name} has until {fmtDate(a.expires_at, zone)} at {fmtTime(a.expires_at, zone)} to approve. The time is held for you until then.
           </p>
         )}
       </div>
 
-      <div className="mb-4 space-y-2">
+      <div className="mt-5 space-y-2 empty:hidden">
         {sp.new && <Notice tone="ok">{modes.email === "preview" ? <>Demo mode: the confirmation email to {m.client.email} is shown in the <Link className="underline" href="/demo/outbox">notification preview</Link>, not sent.</> : <>Confirmation sent to {m.client.email}.</>}</Notice>}
         {sp.moved && <Notice tone="ok">Your new time is saved.</Notice>}
         {sp.cancelled && <Notice tone="info">Cancelled. {provider.display_name} has been told.</Notice>}
         {typeof sp.err === "string" && <Notice tone="bad">{sp.err}</Notice>}
       </div>
 
-      <section className="rounded-3xl border border-line bg-white p-5 sm:p-6">
-        <div className="mb-4 flex items-center gap-3">
-          <Avatar name={provider.display_name} url={provider.avatar_url} size={48} />
-          <div>
-            <p className="font-bold">{provider.display_name}</p>
-            <Link href={`/u/${provider.username}`} className="text-sm font-semibold text-accent">@{provider.username}</Link>
+      <section aria-label="Booking details" className="mt-6">
+        <div className="flex items-center gap-3 border-t border-line pt-4">
+          <Avatar name={provider.display_name} url={provider.avatar_url} size={44} />
+          <div className="min-w-0">
+            <p className="break-words font-semibold">{provider.display_name}</p>
+            <Link href={`/u/${provider.username}`} className="text-sm text-accent hover:underline">@{provider.username}</Link>
           </div>
         </div>
-        <dl className="grid gap-3 text-sm">
+        <dl className="mt-3 divide-y divide-line border-y border-line text-[15px]">
           <Row k="Service" v={`${a.service_name} (${fmtDuration(duration)})`} />
           <Row k="Date" v={fmtDate(start, zone)} />
           <Row k="Time" v={`${fmtTime(start, zone)} – ${fmtTime(end, zone)}`} />
@@ -89,18 +99,18 @@ export default async function ManagePage({ params, searchParams }: PageProps<"/b
       </section>
 
       {live && (
-        <div className="mt-4 space-y-3">
+        <div className="mt-6 space-y-3">
           <a href={`/b/${token}/ics`} className={`${btnSecondary} w-full`}>
-            Add to calendar (.ics)
+            Add to calendar
           </a>
           {service && service.active && (
             <Reschedule token={token} username={provider.username} serviceId={service.id} zone={zone} horizonDays={provider.horizon_days} approval={provider.access_mode === "approval"} />
           )}
-          <details className="rounded-3xl border border-line bg-white p-5">
-            <summary className="cursor-pointer font-semibold text-bad">Cancel booking</summary>
-            <form action={cancelBooking} className="mt-3">
+          <details className="group">
+            <summary className="inline-flex min-h-11 cursor-pointer items-center font-medium text-bad">Cancel booking</summary>
+            <form action={cancelBooking} className="mt-2 rounded-xl bg-bad-soft p-4">
               <input type="hidden" name="token" value={token} />
-              <p className="mb-3 text-sm text-muted">{provider.display_name} will be told. This can&apos;t be undone.</p>
+              <p className="mb-3 text-[15px] text-bad">{provider.display_name} will be told. This can&apos;t be undone.</p>
               <button type="submit" className={`${btnDanger} w-full`}>Yes, cancel it</button>
             </form>
           </details>
@@ -108,25 +118,25 @@ export default async function ManagePage({ params, searchParams }: PageProps<"/b
       )}
 
       {!live && (a.status === "cancelled" || a.status === "declined" || a.status === "expired") && (
-        <Link href={`/u/${provider.username}`} className={`${btnSecondary} mt-4 w-full`}>
+        <Link href={`/u/${provider.username}`} className={`${btn} mt-6 w-full`}>
           Book another time
         </Link>
       )}
 
-      <div className="mt-6 rounded-3xl bg-accent-soft p-5 text-center">
-        <p className="text-sm text-accent-strong">Coming back? Save {provider.display_name} on this device.</p>
-        <SaveProviderButton provider={{ username: provider.username, display_name: provider.display_name }} className="mt-2 min-h-11 rounded-full bg-white px-5 text-sm font-semibold text-accent-strong" />
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
+        <p className="text-[15px] text-muted">Coming back? Keep {provider.display_name.split(" ")[0]} handy.</p>
+        <SaveProviderButton provider={{ username: provider.username, display_name: provider.display_name }} className="min-h-11 rounded-xl px-3 text-[15px] font-medium text-accent hover:bg-accent-soft aria-pressed:text-ok" />
       </div>
-      <p className="mt-6 text-center text-xs text-muted">This page is your private link to manage the booking. Don&apos;t share it.</p>
+      <p className="mt-6 text-sm text-muted">This page is your private link to manage the booking. Don&apos;t share it.</p>
     </main>
   );
 }
 
 function Row({ k, v }: { k: string; v: string }) {
   return (
-    <div className="flex justify-between gap-4">
-      <dt className="text-muted">{k}</dt>
-      <dd className="text-right font-semibold">{v}</dd>
+    <div className="flex justify-between gap-4 py-2.5">
+      <dt className="shrink-0 text-muted">{k}</dt>
+      <dd className="min-w-0 break-words text-right font-medium">{v}</dd>
     </div>
   );
 }

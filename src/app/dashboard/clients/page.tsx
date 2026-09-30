@@ -25,21 +25,21 @@ export default async function Clients({ searchParams }: PageProps<"/dashboard/cl
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight">Clients</h1>
+        <h1 className="text-[28px] font-semibold leading-tight tracking-tight">Clients</h1>
         <form role="search" className="w-full sm:w-64">
           <label htmlFor="q" className="sr-only">Search your clients</label>
-          <input id="q" name="q" defaultValue={q} placeholder="Search your clients" className="min-h-11 w-full rounded-full border border-line bg-white px-4 text-sm focus:border-accent focus:outline-none" />
+          <input id="q" name="q" defaultValue={q} placeholder="Search your clients" className="min-h-11 w-full rounded-xl border border-line bg-white px-4 text-sm focus:border-accent focus:outline-none" />
         </form>
       </div>
       {rows.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-line p-10 text-center text-muted">
+        <div className="border-y border-line py-10 text-center text-muted">
           {q ? "No clients match that search." : "Clients appear here after their first booking."}
         </div>
       ) : (
-        <ul className="divide-y divide-line rounded-3xl border border-line bg-white">
+        <ul className="divide-y divide-line border-y border-line">
           {rows.map((c) => (
             <li key={c.id}>
-              <Link href={`/dashboard/clients/${c.id}`} className="flex min-h-16 items-center justify-between gap-3 px-5 py-3 hover:bg-canvas">
+              <Link href={`/dashboard/clients/${c.id}`} className="flex min-h-16 items-center justify-between gap-3 py-3 hover:bg-canvas sm:-mx-3 sm:rounded-xl sm:px-3">
                 <span className="min-w-0">
                   <span className="block truncate font-semibold">{c.name}</span>
                   <span className="block truncate text-sm text-muted">{c.email}</span>

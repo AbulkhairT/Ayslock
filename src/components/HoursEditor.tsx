@@ -17,11 +17,11 @@ export function HoursEditor({ initial }: { initial: Record<number, DayHours> }) 
     });
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-0">
       {WEEKDAYS.map((w) => {
         const d = days[w.n];
         return (
-          <fieldset key={w.n} className="rounded-2xl border border-line p-3">
+          <fieldset key={w.n} className="border-b border-line py-3">
             <legend className="sr-only">{w.long}</legend>
             <div className="flex items-center justify-between gap-2">
               <label className="flex min-h-11 items-center gap-3 font-semibold">

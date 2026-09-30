@@ -40,15 +40,15 @@ export function OnboardingForm({ appHost, initialUsername = "" }: { appHost: str
     <form action={action} className="space-y-6">
       <ol className="grid grid-cols-3 gap-2" aria-label="Progress">
         {STEPS.map((s, i) => (
-          <li key={s} aria-current={step === i + 1 ? "step" : undefined} className={`border-t-2 pt-2 text-sm font-medium ${step >= i + 1 ? "border-ink text-ink" : "border-line text-muted"}`}>
+          <li key={s} aria-current={step === i + 1 ? "step" : undefined} className={`border-t-2 pt-2 text-sm font-medium ${step >= i + 1 ? "border-accent text-ink" : "border-line text-muted"}`}>
             {i + 1}. {s}
           </li>
         ))}
       </ol>
 
-      {state.error && <p role="alert" className="rounded-2xl bg-bad-soft px-4 py-3 text-sm text-bad">{state.error}</p>}
+      {state.error && <p role="alert" className="rounded-xl bg-bad-soft px-4 py-3 text-[15px] text-bad">{state.error}</p>}
 
-      <section hidden={step !== 1} className="space-y-4 rounded-3xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)] sm:p-6">
+      <section hidden={step !== 1} className="space-y-4">
         <div>
           <label htmlFor="display_name" className={label}>Your name</label>
           <input id="display_name" name="display_name" maxLength={80} className={input} placeholder="Jordan Lee" />
@@ -76,7 +76,7 @@ export function OnboardingForm({ appHost, initialUsername = "" }: { appHost: str
           <legend className={label}>Where do appointments happen?</legend>
           <div className="grid grid-cols-2 gap-2">
             {(["in_person", "online"] as const).map((k) => (
-              <label key={k} className={`flex min-h-12 cursor-pointer items-center justify-center rounded-2xl border text-sm font-semibold ${locationKind === k ? "border-ink bg-ink text-white" : "border-line bg-white"}`}>
+              <label key={k} className={`flex min-h-12 cursor-pointer items-center justify-center rounded-xl border text-sm font-semibold ${locationKind === k ? "border-accent bg-accent-soft text-accent-strong" : "border-line bg-white"}`}>
                 <input type="radio" name="location_kind" value={k} checked={locationKind === k} onChange={() => setLocationKind(k)} className="sr-only" />
                 {k === "in_person" ? "In person" : "Online"}
               </label>
@@ -91,7 +91,7 @@ export function OnboardingForm({ appHost, initialUsername = "" }: { appHost: str
         <button type="button" className={`${btn} w-full`} onClick={() => setStep(2)}>Next: services</button>
       </section>
 
-      <section hidden={step !== 2} className="space-y-4 rounded-3xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)] sm:p-6">
+      <section hidden={step !== 2} className="space-y-4">
         <p className="text-sm text-muted">What can clients book? You can change these anytime.</p>
         <input type="hidden" name="services" value={JSON.stringify(services)} />
         {services.map((s, i) => (
@@ -137,7 +137,7 @@ export function OnboardingForm({ appHost, initialUsername = "" }: { appHost: str
         </div>
       </section>
 
-      <section hidden={step !== 3} className="space-y-4 rounded-3xl bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)] sm:p-6">
+      <section hidden={step !== 3} className="space-y-4">
         <p className="text-sm text-muted">When can clients book you? We filled in Monday to Friday, 10:00 to 19:00. Adjust as you like.</p>
         <HoursEditor initial={DEFAULT_HOURS} />
         <div className="flex gap-2">

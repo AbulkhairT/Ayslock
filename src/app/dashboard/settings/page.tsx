@@ -23,7 +23,7 @@ const MODES = [
 
 const NOTICE = [[0, "No minimum"], [30, "30 minutes"], [60, "1 hour"], [120, "2 hours"], [240, "4 hours"], [720, "12 hours"], [1440, "1 day"], [2880, "2 days"], [10080, "1 week"]] as const;
 
-const section = "rounded-3xl border border-line bg-white p-5 sm:p-6";
+const section = "border-t border-line pt-6";
 
 export default async function Settings({ searchParams }: PageProps<"/dashboard/settings">) {
   const p = await requireProvider();
@@ -39,18 +39,18 @@ export default async function Settings({ searchParams }: PageProps<"/dashboard/s
   const hidden = <input type="hidden" name="back" value={back} />;
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+    <div className="space-y-10">
+      <h1 className="text-[28px] font-semibold leading-tight tracking-tight">Settings</h1>
       <Flash sp={sp} />
 
       <section id="booking" className={section} aria-labelledby="booking-title">
-        <h2 id="booking-title" className="text-lg font-bold">Who can book, and when</h2>
+        <h2 id="booking-title" className="text-lg font-semibold">Who can book, and when</h2>
         <form action={saveRules} className="mt-4 space-y-5">
           {hidden}
           <fieldset className="space-y-2">
             <legend className={label}>Booking access</legend>
             {MODES.map((m) => (
-              <label key={m.v} className="flex cursor-pointer gap-3 rounded-2xl border border-line p-4 has-[:checked]:border-accent has-[:checked]:bg-accent-soft">
+              <label key={m.v} className="flex cursor-pointer gap-3 rounded-xl border border-line p-4 has-[:checked]:border-accent has-[:checked]:bg-accent-soft">
                 <input type="radio" name="access_mode" value={m.v} defaultChecked={p.access_mode === m.v} className="mt-1 h-5 w-5 shrink-0 accent-[var(--color-accent)]" />
                 <span><span className="block font-semibold">{m.t}</span><span className="block text-sm text-muted">{m.d}</span></span>
               </label>
@@ -90,11 +90,11 @@ export default async function Settings({ searchParams }: PageProps<"/dashboard/s
       </section>
 
       <section id="services" className={section} aria-labelledby="services-title">
-        <h2 id="services-title" className="text-lg font-bold">Services</h2>
+        <h2 id="services-title" className="text-lg font-semibold">Services</h2>
         <ul className="mt-3 space-y-3">
           {services.map((s) => (
             <li key={s.id}>
-              <details className="rounded-2xl border border-line p-4">
+              <details className="rounded-xl border border-line p-4">
                 <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-3">
                   <span><span className="font-semibold">{s.name}</span> <span className="text-sm text-muted">· {fmtDuration(s.duration_minutes)}{s.price_cents != null && ` · ${(s.price_cents / 100).toFixed(2)} ${s.currency}`}</span></span>
                   {!s.active && <span className="rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-muted">Hidden</span>}
@@ -113,7 +113,7 @@ export default async function Settings({ searchParams }: PageProps<"/dashboard/s
             </li>
           ))}
         </ul>
-        <details className="mt-3 rounded-2xl border border-dashed border-line p-4">
+        <details className="mt-3 rounded-xl border border-dashed border-line p-4">
           <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-accent">+ Add a service</summary>
           <form action={addService} className="mt-3 grid gap-3 sm:grid-cols-2">
             {hidden}
@@ -127,7 +127,7 @@ export default async function Settings({ searchParams }: PageProps<"/dashboard/s
       </section>
 
       <section id="hours" className={section} aria-labelledby="hours-title">
-        <h2 id="hours-title" className="text-lg font-bold">Weekly hours</h2>
+        <h2 id="hours-title" className="text-lg font-semibold">Weekly hours</h2>
         <p className="mb-3 text-sm text-muted">In {p.timezone.replace(/_/g, " ")}. Breaks are never offered to clients.</p>
         <form action={saveHours} className="space-y-3">
           {hidden}
@@ -137,7 +137,7 @@ export default async function Settings({ searchParams }: PageProps<"/dashboard/s
       </section>
 
       <section id="dates" className={section} aria-labelledby="dates-title">
-        <h2 id="dates-title" className="text-lg font-bold">Days off and special hours</h2>
+        <h2 id="dates-title" className="text-lg font-semibold">Days off and special hours</h2>
         <p className="mb-3 text-sm text-muted">These replace your weekly hours for that date. Existing appointments stay; cancel them from your schedule if needed.</p>
         {exceptions.length > 0 && (
           <ul className="mb-4 divide-y divide-line">
@@ -167,7 +167,7 @@ export default async function Settings({ searchParams }: PageProps<"/dashboard/s
       </section>
 
       <section id="profile" className={section} aria-labelledby="profile-title">
-        <h2 id="profile-title" className="text-lg font-bold">Profile</h2>
+        <h2 id="profile-title" className="text-lg font-semibold">Profile</h2>
         <form action={saveProfile} className="mt-4 space-y-4">
           {hidden}
           <div><label className={label} htmlFor="display_name">Name</label><input id="display_name" name="display_name" defaultValue={p.display_name} className={input} required maxLength={80} /></div>

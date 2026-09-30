@@ -7,7 +7,6 @@ import { providerByUsername } from "@/lib/providers";
 import { usernameProblem } from "@/lib/username";
 import { Logo } from "@/components/Logo";
 import { NoDatabaseNotice } from "@/components/NoDatabase";
-import { card } from "@/components/ui";
 import { signUpAction } from "../actions";
 import { AuthForm } from "../AuthForm";
 
@@ -23,10 +22,10 @@ export default async function SignUp({ searchParams }: PageProps<"/signup">) {
   const host = env.appUrl.replace(/^https?:\/\//, "");
 
   return (
-    <main id="main" className="mx-auto max-w-md px-5 pb-16 pt-6">
+    <main id="main" className="mx-auto max-w-md px-4 pb-16 pt-2 sm:px-6">
       <Logo />
       <NoDatabaseNotice className="mt-6" what="A new account can disappear right after you create it." />
-      <h1 className="mt-12 text-4xl font-semibold tracking-tight">Create your page</h1>
+      <h1 className="mt-10 text-[28px] font-semibold leading-tight tracking-tight">Create your page</h1>
       {claim ? (
         <p className="mt-3 text-lg text-muted">
           <span className="font-medium text-ink">{host}/@{claim}</span> is free. Add an email and password to keep it.
@@ -34,9 +33,9 @@ export default async function SignUp({ searchParams }: PageProps<"/signup">) {
       ) : (
         <p className="mt-3 text-lg text-muted">{problem ?? "An email and a password. You'll pick your @username next."}</p>
       )}
-      <div className={`${card} mt-8`}>
+      <div className="mt-8">
         {modes.auth === "demo" && (
-          <p className="mb-4 rounded-2xl bg-warn-soft px-4 py-3 text-sm text-warn">
+          <p className="mb-4 rounded-xl bg-warn-soft px-4 py-3 text-[15px] text-warn">
             <strong>Demo sign-up.</strong> Accounts are stored in the demo database. No email is verified.
           </p>
         )}

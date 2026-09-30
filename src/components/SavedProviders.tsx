@@ -36,15 +36,19 @@ export function SavedProviders() {
   }, []);
   if (!saved.length) return null;
   return (
-    <section aria-labelledby="saved-title" className="mt-10 w-full">
-      <h2 id="saved-title" className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
+    <section aria-labelledby="saved-title" className="mt-8 w-full">
+      <h2 id="saved-title" className="text-[13px] font-semibold uppercase tracking-wide text-muted">
         Saved on this device
       </h2>
-      <ul className="flex flex-wrap gap-2">
+      <ul className="mt-2 divide-y divide-line border-y border-line">
         {saved.map((p) => (
           <li key={p.username}>
-            <Link href={`/u/${p.username}`} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-white px-4 text-sm font-semibold hover:border-ink">
-              {p.display_name} <span className="font-normal text-muted">@{p.username}</span>
+            <Link href={`/u/${p.username}`} className="flex min-h-14 items-center justify-between gap-3 py-2 hover:text-accent">
+              <span className="min-w-0">
+                <span className="block truncate font-medium">{p.display_name}</span>
+                <span className="block truncate text-sm text-muted">@{p.username}</span>
+              </span>
+              <svg viewBox="0 0 8 14" aria-hidden className="h-3.5 w-2 shrink-0 text-muted"><path d="M1 1l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
           </li>
         ))}
@@ -53,7 +57,7 @@ export function SavedProviders() {
   );
 }
 
-export function SaveProviderButton({ provider, className }: { provider: SavedProvider; className?: string }) {
+export function SaveProviderButton({ provider, className, compact }: { provider: SavedProvider; className?: string; compact?: boolean }) {
   const [saved, setSaved] = useState(false);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is only readable after mount
@@ -65,9 +69,10 @@ export function SaveProviderButton({ provider, className }: { provider: SavedPro
     writeSaved(list);
     setSaved(!saved);
   };
+  const text = saved ? `Saved ${provider.display_name} on this device` : `Save ${provider.display_name} for next time`;
   return (
-    <button type="button" onClick={toggle} aria-pressed={saved} className={className}>
-      {saved ? `★ Saved ${provider.display_name}` : `☆ Save ${provider.display_name} for next time`}
+    <button type="button" onClick={toggle} aria-pressed={saved} aria-label={compact ? text : undefined} className={className}>
+      {compact ? (saved ? "Saved" : "Save") : text}
     </button>
   );
 }

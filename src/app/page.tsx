@@ -2,142 +2,89 @@ import Link from "next/link";
 import { env, modes } from "@/lib/env";
 import { Logo } from "@/components/Logo";
 import { SavedProviders } from "@/components/SavedProviders";
+import { BookingDemo } from "./_home/BookingDemo";
 import { ClaimForm } from "./_home/ClaimForm";
 import { LookupForm } from "./_home/LookupForm";
 
 const host = env.appUrl.replace(/^https?:\/\//, "");
 
-/** A small, true-to-life preview of a provider's page. */
-function ProfilePreview() {
-  const services = [
-    ["Haircut", "30 min", "$35"],
-    ["Beard trim", "20 min", "$20"],
-    ["Cut and beard", "45 min", "$50"],
-  ];
-  const times = ["10:30", "11:15", "13:00", "14:45", "16:30"];
-  return (
-    <div aria-hidden className="mx-auto w-full max-w-[340px] rounded-[36px] bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.05),0_24px_60px_rgba(0,0,0,0.08)]">
-      <div className="flex flex-col items-center text-center">
-        <div className="grid h-16 w-16 place-items-center rounded-full bg-[#efe8da] text-lg font-semibold">MB</div>
-        <p className="mt-3 text-lg font-semibold">Marco Bellini</p>
-        <p className="text-sm text-muted">@marco · Barber in Brooklyn</p>
-      </div>
-      <ul className="mt-5 space-y-2">
-        {services.map(([n, d, p], i) => (
-          <li key={n} className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm ${i === 0 ? "bg-ink text-white" : "bg-canvas"}`}>
-            <span className="font-medium">{n}</span>
-            <span className={i === 0 ? "text-white/70" : "text-muted"}>{d} · {p}</span>
-          </li>
-        ))}
-      </ul>
-      <p className="mt-5 text-xs font-medium text-muted">Tomorrow</p>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {times.map((t, i) => (
-          <span key={t} className={`rounded-full px-3 py-1.5 text-sm ${i === 1 ? "bg-ink text-white" : "border border-line"}`}>{t}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
+const MODES = [
+  ["Open", "Anyone with your username sees your free times and books straight away."],
+  ["Approve first", "People request a time. It's held for them until you accept, or it lapses."],
+  ["Invite only", "Your times stay hidden. People ask, and you send a private link you can turn off."],
+];
 
 export default function Home() {
   const demo = modes.auth === "demo";
   return (
     <div className="min-h-dvh overflow-x-clip">
-      <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
+      <header className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
         <Logo />
-        <nav aria-label="Main" className="flex items-center gap-1 text-[15px]">
-          <Link href="/signin" className="rounded-full px-4 py-2 font-medium hover:bg-black/5">Log in</Link>
-          <Link href="/signup" className="rounded-full bg-ink px-4 py-2 font-semibold text-white hover:bg-ink/85">Create</Link>
+        <nav aria-label="Main" className="flex items-center text-[15px]">
+          <Link href="#providers" className="hidden min-h-11 items-center px-3 text-muted hover:text-ink sm:inline-flex">Offer your services</Link>
+          <Link href="/signin" className="inline-flex min-h-11 items-center px-3 font-medium hover:text-accent">Log in</Link>
         </nav>
       </header>
 
       <main id="main">
-        <section className="mx-auto max-w-2xl px-5 pb-16 pt-14 text-center sm:pt-24">
-          <h1 className="text-[44px] font-semibold leading-[1.05] tracking-[-0.03em] sm:text-7xl">One link for every booking.</h1>
-          <p className="mx-auto mt-5 max-w-md text-lg text-muted">
-            Share your @username. Clients pick a time and they&apos;re booked. No app, no account, no back-and-forth.
-          </p>
-          <div className="mx-auto mt-9 max-w-md text-left">
-            <ClaimForm host={host} />
-          </div>
-          {demo && (
-            <Link href="/u/marco" className="mt-2 inline-block text-[15px] font-medium text-accent hover:underline">
-              See it working on @marco →
-            </Link>
-          )}
-        </section>
-
-        <section className="px-5 pb-20">
-          <ProfilePreview />
-        </section>
-
-        <section className="mx-auto max-w-md px-5 pb-20">
-          <h2 className="text-2xl font-semibold tracking-tight">Booking with someone?</h2>
-          <p className="mb-5 mt-1 text-muted">No sign-up needed. Just their username.</p>
+        <section className="mx-auto max-w-xl px-4 pb-14 pt-8 sm:px-6 sm:pt-20">
+          <h1 className="text-[34px] font-semibold leading-[1.1] tracking-tight sm:text-5xl">Book your next visit.</h1>
+          <p className="mb-7 mt-3 text-lg text-muted">Your barber, tutor or trainer gives you their @username. That&apos;s all you need.</p>
           <LookupForm />
           {demo && (
-            <p className="mt-4 pl-5 text-sm text-muted">
-              Try <Link className="font-medium text-ink underline" href="/u/marco">@marco</Link>, <Link className="font-medium text-ink underline" href="/u/lena">@lena</Link> or{" "}
-              <Link className="font-medium text-ink underline" href="/u/sofia">@sofia</Link>.
+            <p className="mt-4 text-[15px] text-muted">
+              Just looking? Try <Link className="font-medium text-accent hover:underline" href="/u/marco">@marco</Link>,{" "}
+              <Link className="font-medium text-accent hover:underline" href="/u/lena">@lena</Link> or{" "}
+              <Link className="font-medium text-accent hover:underline" href="/u/sofia">@sofia</Link>.
             </p>
           )}
-          <div className="mt-6">
-            <SavedProviders />
+          <SavedProviders />
+          <p className="mt-8 text-[15px] text-muted sm:hidden">
+            Take bookings yourself? <Link href="#providers" className="font-medium text-accent">Offer your services</Link>
+          </p>
+        </section>
+
+        <section aria-labelledby="how-title" className="border-t border-line bg-canvas">
+          <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-20">
+            <h2 id="how-title" className="mb-8 text-2xl font-semibold tracking-tight sm:text-3xl">How booking works</h2>
+            <BookingDemo />
           </div>
         </section>
 
-        <section className="border-t border-line">
-          <div className="mx-auto grid max-w-5xl gap-10 px-5 py-20 sm:grid-cols-3">
-            {[
-              ["1", "Claim your @username", "Pick the name clients will type. You can change it later."],
-              ["2", "Add services and hours", "What you offer, how long it takes, when you work. Ayslock only offers times that fit."],
-              ["3", "Share the link", "In your bio, your messages, or as a QR code by the mirror."],
-            ].map(([n, t, d]) => (
-              <div key={n}>
-                <p className="text-sm font-semibold text-accent">{n}</p>
-                <h3 className="mt-2 text-xl font-semibold tracking-tight">{t}</h3>
-                <p className="mt-2 text-muted">{d}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="border-t border-line">
-          <div className="mx-auto max-w-5xl px-5 py-20">
-            <h2 className="max-w-lg text-3xl font-semibold tracking-tight sm:text-4xl">You decide who gets in.</h2>
-            <dl className="mt-10 grid gap-8 sm:grid-cols-3">
-              {[
-                ["Open", "Anyone with your username sees your free times and books."],
-                ["Approve first", "Clients request a time. It's held for them until you say yes, or it lapses."],
-                ["Invite only", "Your times stay hidden. People ask, and you send a private link you can switch off."],
-              ].map(([t, d]) => (
-                <div key={t} className="rounded-3xl bg-white p-6">
-                  <dt className="text-lg font-semibold">{t}</dt>
-                  <dd className="mt-2 text-muted">{d}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </section>
-
-        <section className="border-t border-line">
-          <div className="mx-auto max-w-md px-5 py-20 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Get your link.</h2>
-            <p className="mb-8 mt-2 text-muted">Free for your page, services, hours, reminders and client list.</p>
-            <div className="text-left">
-              <ClaimForm host={host} id="claim-bottom" />
+        <section id="providers" aria-labelledby="providers-title" className="scroll-mt-4 border-t border-line">
+          <div className="mx-auto grid max-w-5xl gap-10 px-4 py-14 sm:px-6 sm:py-20 md:grid-cols-2 md:gap-16">
+            <div>
+              <h2 id="providers-title" className="text-2xl font-semibold tracking-tight sm:text-3xl">Offer your services</h2>
+              <p className="mb-7 mt-3 text-lg text-muted">
+                Set your services and hours once. Share one link. Clients only ever see times that genuinely fit.
+              </p>
+              <ClaimForm host={host} />
+              <p className="mt-4 text-[15px] text-muted">
+                Already set up? <Link href="/signin" className="font-medium text-accent hover:underline">Log in</Link>
+              </p>
+            </div>
+            <div>
+              <h3 className="text-[13px] font-semibold uppercase tracking-wide text-muted">You choose who can book</h3>
+              <dl className="mt-3 divide-y divide-line border-y border-line">
+                {MODES.map(([t, d]) => (
+                  <div key={t} className="py-4">
+                    <dt className="font-semibold">{t}</dt>
+                    <dd className="mt-1 text-[15px] text-muted">{d}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-4 text-[15px] text-muted">Two people can never end up with the same slot.</p>
             </div>
           </div>
         </section>
       </main>
 
       <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-sm text-muted">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-sm text-muted sm:px-6">
           <Logo />
-          <div className="flex gap-5">
-            <Link href="/signup" className="hover:text-ink">Create a page</Link>
-            <Link href="/signin" className="hover:text-ink">Log in</Link>
+          <div className="flex">
+            <Link href="/signup" className="inline-flex min-h-11 items-center px-3 hover:text-ink">Create a page</Link>
+            <Link href="/signin" className="inline-flex min-h-11 items-center px-3 hover:text-ink">Log in</Link>
           </div>
         </div>
       </footer>

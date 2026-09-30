@@ -12,8 +12,8 @@ export function DemoBanner() {
   }
   if (!parts.length) return null;
   return (
-    <div className="bg-ink px-4 py-2 text-center text-xs text-white sm:text-sm">
-      <strong className="font-semibold">Local demo mode:</strong> {parts.join(", ")}.{" "}
+    <div className="bg-warn-soft px-4 py-2 text-center text-[13px] text-warn">
+      <strong className="font-semibold">Demo mode:</strong> {parts.join(", ")}.{" "}
       {modes.email === "preview" && (
         <Link href="/demo/outbox" className="font-semibold underline underline-offset-2">
           Notification preview

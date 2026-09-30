@@ -18,7 +18,7 @@ export function CopyButton({ text, className, label = "Copy link" }: { text: str
         }
       }}
     >
-      <span aria-live="polite">{done ? "Copied ✓" : label}</span>
+      <span aria-live="polite">{done ? "Copied" : label}</span>
     </button>
   );
 }

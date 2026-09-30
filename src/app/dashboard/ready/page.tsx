@@ -14,10 +14,10 @@ export default async function Ready() {
   return (
     <div className="mx-auto max-w-md text-center">
       <p className="text-5xl" aria-hidden>🎉</p>
-      <h1 className="mt-3 text-3xl font-bold tracking-tight">Your Ayslock is ready.</h1>
+      <h1 className="mt-3 text-[28px] font-semibold leading-tight tracking-tight">Your Ayslock is ready.</h1>
       <p className="mt-2 text-muted">Share it: &ldquo;Here&apos;s my Ayslock: @{provider.username}.&rdquo;</p>
-      <div className="mt-6 rounded-3xl border border-line bg-white p-5">
-        <p className="break-all text-lg font-bold text-accent">{link}</p>
+      <div className="mt-6 rounded-2xl border border-line bg-white p-5">
+        <p className="break-all text-lg font-semibold text-accent">{link}</p>
         <CopyButton text={link} className={`${btn} mt-4 w-full`} />
         {/* eslint-disable-next-line @next/next/no-img-element -- inline data URL */}
         <img src={qr} alt={`QR code for ${link}`} width={240} height={240} className="mx-auto mt-6 h-60 w-60" />

@@ -41,9 +41,9 @@ export function Reschedule(p: { token: string; username: string; serviceId: stri
   }
 
   return (
-    <section aria-labelledby="rs-title" className="space-y-4 rounded-3xl border border-line bg-white p-5">
-      <h2 id="rs-title" className="text-lg font-bold">Pick a new time</h2>
-      {p.approval && <p className="text-sm text-muted">The new time needs approval again. Until then it shows as pending.</p>}
+    <section aria-labelledby="rs-title" className="space-y-4 border-y border-line py-5">
+      <h2 id="rs-title" className="text-xl font-semibold tracking-tight">Pick a new time</h2>
+      {p.approval && <p className="text-[15px] text-muted">The new time needs approval again. Until then it shows as pending.</p>}
       <SlotPicker username={p.username} serviceId={p.serviceId} zone={zone} onZoneChange={setZone} horizonDays={p.horizonDays} selected={slot} onSelect={setSlot} manageToken={p.token} notice={notice} refreshKey={refreshKey} />
       <div className="flex flex-col gap-2 sm:flex-row">
         <button type="button" className={`${btn} flex-1`} disabled={!slot || busy} onClick={save}>

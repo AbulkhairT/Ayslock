@@ -12,11 +12,16 @@ const LINKS = [
 export function DashNav() {
   const path = usePathname();
   return (
-    <nav aria-label="Dashboard" className="mt-4 flex gap-1 rounded-full bg-white p-1 shadow-sm ring-1 ring-line">
+    <nav aria-label="Dashboard" className="flex gap-6 border-b border-line">
       {LINKS.map((l) => {
         const active = l.href === "/dashboard" ? path === "/dashboard" : path.startsWith(l.href);
         return (
-          <Link key={l.href} href={l.href} aria-current={active ? "page" : undefined} className={`flex min-h-11 flex-1 items-center justify-center rounded-full text-sm font-semibold ${active ? "bg-ink text-white" : "text-muted hover:text-ink"}`}>
+          <Link
+            key={l.href}
+            href={l.href}
+            aria-current={active ? "page" : undefined}
+            className={`-mb-px inline-flex min-h-11 items-center border-b-2 text-[15px] ${active ? "border-accent font-semibold text-ink" : "border-transparent text-muted hover:text-ink"} ${l.href.endsWith("settings") ? "ml-auto" : ""}`}
+          >
             {l.label}
           </Link>
         );

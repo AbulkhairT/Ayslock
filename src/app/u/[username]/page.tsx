@@ -8,6 +8,7 @@ import { providerByUsername, servicesFor } from "@/lib/providers";
 import { normalizeUsername } from "@/lib/username";
 import { Avatar } from "@/components/Avatar";
 import { Logo } from "@/components/Logo";
+import { Notice } from "@/components/Notice";
 import { SaveProviderButton } from "@/components/SavedProviders";
 import { AccessRequestForm } from "./AccessRequestForm";
 import { BookingFlow } from "./BookingFlow";
@@ -39,77 +40,81 @@ export default async function ProviderPage({ params, searchParams }: PageProps<"
   const canSeeTimes = provider.access_mode !== "private" || !!grant;
   const location = locationLine(provider);
 
+  const first = provider.display_name.split(" ")[0];
+
   return (
-    <main id="main" className="mx-auto max-w-xl px-5 pb-16 pt-6">
-      <header className="mb-6 flex items-center justify-between">
+    <main id="main" className="mx-auto max-w-2xl px-4 pb-16 sm:px-6">
+      <header className="flex items-center justify-between gap-3 py-2">
         <Logo />
+        <SaveProviderButton provider={{ username: provider.username, display_name: provider.display_name }} compact className="min-h-11 rounded-xl px-3 text-[15px] font-medium text-accent hover:bg-accent-soft aria-pressed:text-ok" />
       </header>
 
-      <section className="mb-6 flex items-start gap-4">
-        <Avatar name={provider.display_name} url={provider.avatar_url} size={80} />
+      <section className="mt-6 flex items-center gap-4">
+        <Avatar name={provider.display_name} url={provider.avatar_url} size={64} />
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight">{provider.display_name}</h1>
-          <p className="font-semibold text-accent">@{provider.username}</p>
-          <p className="mt-1 text-sm text-muted">
-            <span aria-hidden>{provider.location_kind === "online" ? "💻 " : "📍 "}</span>
-            {location}
+          <h1 className={`break-words font-semibold leading-tight tracking-tight ${provider.display_name.length > 24 ? "text-[22px]" : "text-[28px]"}`}>{provider.display_name}</h1>
+          <p className="text-muted">
+            @{provider.username}
+            <span aria-hidden> · </span>
+            <span className={provider.access_mode === "open" ? "text-ok" : provider.access_mode === "approval" ? "text-warn" : "text-accent"}>
+              {provider.access_mode === "open" ? "Books instantly" : provider.access_mode === "approval" ? "Approves each booking" : "Invite only"}
+            </span>
           </p>
         </div>
       </section>
-      {provider.bio && <p className="mb-6 text-base leading-relaxed">{provider.bio}</p>}
+      <p className="mt-4 break-words text-[15px] text-muted">{location}</p>
+      {provider.bio && <p className="mt-2 break-words text-base leading-relaxed">{provider.bio}</p>}
 
-      {provider.access_mode === "approval" && (
-        <p className="mb-4 rounded-2xl bg-accent-soft px-4 py-3 text-sm text-accent-strong">Bookings are confirmed once {provider.display_name.split(" ")[0]} approves them.</p>
-      )}
-      {grant && (
-        <p className="mb-4 rounded-2xl bg-ok-soft px-4 py-3 text-sm text-ok">
-          Private booking link for {grant.name}. Valid until {fmtDate(grant.expires_at!, provider.timezone)}.
-        </p>
-      )}
+      <div className="mt-6 space-y-2">
+        {provider.access_mode === "approval" && (
+          <Notice tone="info">{first} approves each booking. You&apos;ll get an email when it&apos;s confirmed.</Notice>
+        )}
+        {grant && (
+          <Notice tone="ok">Private booking link for {grant.name}. Valid until {fmtDate(grant.expires_at!, provider.timezone)}.</Notice>
+        )}
+      </div>
 
-      {services.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-line p-8 text-center text-muted">{provider.display_name} isn&apos;t taking bookings yet.</div>
-      ) : canSeeTimes ? (
-        <BookingFlow
-          username={provider.username}
-          displayName={provider.display_name}
-          providerZone={provider.timezone}
-          location={location}
-          mode={provider.access_mode}
-          pendingHours={provider.pending_expiry_hours}
-          horizonDays={provider.horizon_days}
-          accessToken={grant ? k : null}
-          services={services.map((s) => ({
-            id: s.id,
-            name: s.name,
-            description: s.description,
-            duration: s.duration_minutes,
-            durationLabel: fmtDuration(s.duration_minutes),
-            price: fmtPrice(s.price_cents, s.currency),
-          }))}
-        />
-      ) : (
-        <div className="space-y-4">
-          <section aria-labelledby="svc-title" className="rounded-3xl border border-line bg-white p-5">
-            <h2 id="svc-title" className="mb-3 text-lg font-bold">Services</h2>
-            <ul className="divide-y divide-line">
-              {services.map((s) => (
-                <li key={s.id} className="flex justify-between gap-4 py-3">
-                  <span className="font-semibold">{s.name}</span>
-                  <span className="text-sm text-muted">
-                    {fmtDuration(s.duration_minutes)}
-                    {s.price_cents != null && ` · ${fmtPrice(s.price_cents, s.currency)}`}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-          <AccessRequestForm username={provider.username} displayName={provider.display_name} invalidLink={!!k} />
-        </div>
-      )}
-
-      <div className="mt-6 text-center">
-        <SaveProviderButton provider={{ username: provider.username, display_name: provider.display_name }} className="min-h-11 rounded-full px-4 text-sm font-semibold text-muted hover:text-ink" />
+      <div className="mt-8">
+        {services.length === 0 ? (
+          <p className="border-y border-line py-10 text-center text-muted">{provider.display_name} isn&apos;t taking bookings yet.</p>
+        ) : canSeeTimes ? (
+          <BookingFlow
+            username={provider.username}
+            displayName={provider.display_name}
+            providerZone={provider.timezone}
+            location={location}
+            mode={provider.access_mode}
+            pendingHours={provider.pending_expiry_hours}
+            horizonDays={provider.horizon_days}
+            accessToken={grant ? k : null}
+            services={services.map((s) => ({
+              id: s.id,
+              name: s.name,
+              description: s.description,
+              duration: s.duration_minutes,
+              durationLabel: fmtDuration(s.duration_minutes),
+              price: fmtPrice(s.price_cents, s.currency),
+            }))}
+          />
+        ) : (
+          <div className="space-y-10">
+            <section aria-labelledby="svc-title">
+              <h2 id="svc-title" className="text-[13px] font-semibold uppercase tracking-wide text-muted">Services</h2>
+              <ul className="mt-2 divide-y divide-line border-y border-line">
+                {services.map((s) => (
+                  <li key={s.id} className="flex items-baseline justify-between gap-4 py-3.5">
+                    <span className="min-w-0 break-words font-medium">{s.name}</span>
+                    <span className="flex shrink-0 gap-4 text-[15px] tabular-nums">
+                      <span className="text-muted">{fmtDuration(s.duration_minutes)}</span>
+                      {s.price_cents != null && <span className="min-w-12 text-right">{fmtPrice(s.price_cents, s.currency)}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+            <AccessRequestForm username={provider.username} displayName={provider.display_name} invalidLink={!!k} />
+          </div>
+        )}
       </div>
     </main>
   );

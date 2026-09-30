@@ -26,8 +26,8 @@ export default async function Outbox() {
   return (
     <main id="main" className="mx-auto max-w-3xl px-5 pb-16 pt-6">
       <Logo />
-      <div className="mt-6 rounded-3xl border-2 border-dashed border-warn/50 bg-warn-soft p-5 text-warn">
-        <h1 className="text-xl font-bold">Notification preview (demo mode)</h1>
+      <div className="mt-6 rounded-2xl border-2 border-dashed border-warn/50 bg-warn-soft p-5 text-warn">
+        <h1 className="text-xl font-semibold">Notification preview (demo mode)</h1>
         <p className="mt-1 text-sm">
           No email is sent in demo mode. This page shows exactly what the notification worker would send. Set <code>RESEND_API_KEY</code> and <code>EMAIL_FROM</code> to deliver real email.
         </p>
@@ -37,7 +37,7 @@ export default async function Outbox() {
       {rows.length === 0 && <p className="mt-8 text-center text-muted">Nothing yet. Make a booking to see its confirmation here.</p>}
       <ul className="mt-4 space-y-3">
         {rows.map((n) => (
-          <li key={n.id} className="rounded-3xl border border-line bg-white p-5">
+          <li key={n.id} className="rounded-2xl border border-line bg-white p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs font-semibold uppercase tracking-wide text-muted">{n.kind.replace(/_/g, " ")} → {n.to_email}</span>
               <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${TONE[n.status] ?? ""}`}>

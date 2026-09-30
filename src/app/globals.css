@@ -1,19 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --color-canvas: #faf8f2;
-  --color-ink: #111111;
-  --color-muted: #6b665d;
-  --color-line: #e7e2d6;
-  --color-accent: #c23b20;
-  --color-accent-strong: #9e2f18;
-  --color-accent-soft: #fbeae4;
-  --color-ok: #17753f;
-  --color-ok-soft: #e3f4e9;
-  --color-warn: #8a5300;
-  --color-warn-soft: #fdf1dc;
+  /* Neutral, Apple-like greys with one blue accent for actions and selection. */
+  --color-canvas: #f5f5f7;
+  --color-surface: #ffffff;
+  --color-ink: #1d1d1f;
+  --color-muted: #5f5f64;
+  --color-line: #dedee3;
+  --color-accent: #0066cc;
+  --color-accent-strong: #004f9e;
+  --color-accent-soft: #e8f1fb;
+  --color-ok: #1b7a3d;
+  --color-ok-soft: #e6f4ea;
+  --color-warn: #8a5000;
+  --color-warn-soft: #fdf3e1;
   --color-bad: #b42318;
-  --color-bad-soft: #fde8e6;
+  --color-bad-soft: #fdeceb;
   /* The Apple system font (SF Pro on Apple devices), as apple.com uses, with close fallbacks elsewhere. */
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
@@ -23,7 +25,7 @@
 }
 
 body {
-  background: var(--color-canvas);
+  background: var(--color-surface);
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -40,3 +42,32 @@ details > summary {
 details > summary::-webkit-details-marker {
   display: none;
 }
+
+/* Respect people who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Walkthrough on the home page. Only runs when motion is allowed (see the rule above). */
+@keyframes ays-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes ays-type {
+  from { width: 0; }
+}
+@keyframes ays-press {
+  0%, 60% { box-shadow: 0 0 0 0 rgb(0 102 204 / 0); }
+  75% { box-shadow: 0 0 0 6px rgb(0 102 204 / 0.18); }
+  100% { box-shadow: 0 0 0 0 rgb(0 102 204 / 0); }
+}
+.ays-in { animation: ays-in 360ms ease-out both; }
+.ays-type { display: inline-block; overflow: hidden; white-space: nowrap; vertical-align: bottom; animation: ays-type 900ms steps(6, end) 250ms both; }
+.ays-press { animation: ays-press 1400ms ease-out 700ms both; }

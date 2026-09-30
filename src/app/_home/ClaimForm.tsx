@@ -33,29 +33,31 @@ export function ClaimForm({ host, id = "claim" }: { host: string; id?: string })
 
   return (
     <form action="/signup" method="get" className="w-full">
-      <label htmlFor={id} className="sr-only">Choose your username</label>
-      <div className="flex items-center gap-2 rounded-full bg-white p-1.5 pl-5 shadow-[0_1px_2px_rgba(0,0,0,0.05),0_10px_30px_rgba(0,0,0,0.06)] focus-within:ring-2 focus-within:ring-ink/15">
-        <span aria-hidden className="shrink-0 text-lg text-muted">@</span>
-        <input
-          id={id}
-          name="u"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          maxLength={31}
-          autoComplete="off"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          placeholder="yourname"
-          aria-describedby={`${id}-status`}
-          className="min-w-0 flex-1 bg-transparent text-lg text-ink placeholder:text-muted/50 focus:outline-none focus-visible:outline-none"
-        />
-        <button type="submit" disabled={shown.state === "problem"} className="h-12 shrink-0 rounded-full bg-ink px-6 text-base font-semibold text-white transition hover:bg-ink/85 disabled:opacity-40">
+      <label htmlFor={id} className="mb-2 block text-[15px] font-medium text-muted">Choose your username</label>
+      <div className="flex gap-2">
+        <div className="flex min-w-0 flex-1 items-center rounded-xl border border-line bg-surface pl-4 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20">
+          <span aria-hidden className="text-lg text-muted">@</span>
+          <input
+            id={id}
+            name="u"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            maxLength={31}
+            autoComplete="off"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            placeholder="yourname"
+            aria-describedby={`${id}-status`}
+            className="h-12 min-w-0 flex-1 bg-transparent pl-1 pr-3 text-lg text-ink placeholder:text-muted/60 focus:outline-none focus-visible:outline-none"
+          />
+        </div>
+        <button type="submit" disabled={shown.state === "problem"} className="h-12 shrink-0 rounded-xl border border-ink/70 bg-surface px-5 text-base font-semibold text-ink transition-colors hover:bg-canvas disabled:border-line disabled:text-muted">
           Create
         </button>
       </div>
-      <p id={`${id}-status`} aria-live="polite" className={`mt-3 min-h-5 pl-5 text-sm ${shown.state === "free" ? "text-ok" : shown.state === "problem" ? "text-bad" : "text-muted"}`}>
-        {shown.state === "free" ? `${shown.message}. Your link: ${host}/@${name}` : shown.state === "problem" ? shown.message : shown.state === "checking" ? "Checking…" : "Pick the name clients will type. It's free."}
+      <p id={`${id}-status`} aria-live="polite" className={`mt-2 min-h-5 text-sm ${shown.state === "free" ? "text-ok" : shown.state === "problem" ? "text-bad" : "text-muted"}`}>
+        {shown.state === "free" ? `${shown.message}. Your link: ${host}/@${name}` : shown.state === "problem" ? shown.message : shown.state === "checking" ? "Checking…" : "Free to set up. You can change it later."}
       </p>
     </form>
   );

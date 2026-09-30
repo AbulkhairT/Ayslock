@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { SlotPicker } from "@/components/SlotPicker";
 import { browserZone } from "@/components/TimezoneSelect";
-import { btn, input, label, textarea } from "@/components/ui";
+import { btn, hint, input, label, textarea } from "@/components/ui";
 
 export interface ServiceView {
   id: string;
@@ -101,48 +101,58 @@ export function BookingFlow(p: Props) {
   const when = slot ? DateTime.fromISO(slot).setZone(zone) : null;
   const end = when && service ? when.plus({ minutes: service.duration }) : null;
   const stepNo = { service: 1, time: 2, details: 3 }[step];
+  const priceCell = (s: ServiceView) => s.price ?? "";
 
   return (
-    <section aria-labelledby="book-title" className="rounded-3xl border border-line bg-white p-5 sm:p-6">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <h2 id="book-title" ref={headingRef} tabIndex={-1} className="text-lg font-bold tracking-tight focus:outline-none">
+    <section aria-labelledby="book-title">
+      <ol aria-label={`Step ${stepNo} of 3`} className="mb-3 flex gap-1.5">
+        {["Service", "Time", "Details"].map((l, i) => (
+          <li key={l} className={`h-1 flex-1 rounded-full ${i < stepNo ? "bg-accent" : "bg-line"}`}><span className="sr-only">{l}{i + 1 === stepNo ? " (current)" : i + 1 < stepNo ? " (done)" : ""}</span></li>
+        ))}
+      </ol>
+      <div className="mb-4 flex items-baseline justify-between gap-2">
+        <h2 id="book-title" ref={headingRef} tabIndex={-1} className="text-xl font-semibold tracking-tight focus:outline-none">
           {step === "service" && "Choose a service"}
           {step === "time" && "Pick a time"}
           {step === "details" && "Your details"}
         </h2>
-        <span className="text-sm font-semibold text-muted">Step {stepNo} of 3</span>
+        <span className="shrink-0 text-sm text-muted">Step {stepNo} of 3</span>
       </div>
 
       {step !== "service" && service && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-canvas px-4 py-3 text-sm">
-          <span>
-            <strong>{service.name}</strong> · {service.durationLabel}
-            {service.price && ` · ${service.price}`}
+        <div className="mb-5 flex items-center justify-between gap-3 border-y border-line py-3">
+          <span className="min-w-0">
+            <span className="block break-words font-medium">{service.name}</span>
+            <span className="block text-sm text-muted">
+              {service.durationLabel}
+              {service.price && ` · ${service.price}`}
+            </span>
           </span>
-          <button type="button" onClick={() => setStep("service")} className="min-h-11 font-semibold text-accent">
+          <button type="button" onClick={() => setStep("service")} className="min-h-11 shrink-0 rounded-xl px-3 font-medium text-accent hover:bg-accent-soft">
             Change
           </button>
         </div>
       )}
 
       {step === "service" && (
-        <ul className="space-y-3">
+        <ul className="divide-y divide-line border-y border-line">
           {p.services.map((s) => (
             <li key={s.id}>
               <button
                 type="button"
                 onClick={() => pick(s)}
-                className="flex w-full items-center justify-between gap-4 rounded-2xl border border-line bg-white p-4 text-left transition hover:border-ink"
+                className="group flex w-full items-center gap-4 py-4 text-left transition-colors hover:bg-canvas sm:-mx-3 sm:w-[calc(100%+1.5rem)] sm:rounded-xl sm:px-3"
               >
-                <span>
-                  <span className="block text-base font-semibold">{s.name}</span>
-                  <span className="block text-sm text-muted">
-                    {s.durationLabel}
-                    {s.price && ` · ${s.price}`}
-                  </span>
-                  {s.description && <span className="mt-1 block text-sm text-muted">{s.description}</span>}
+                <span className="min-w-0 flex-1">
+                  <span className="block break-words font-semibold">{s.name}</span>
+                  {s.description && <span className="mt-0.5 block break-words text-[15px] text-muted">{s.description}</span>}
                 </span>
-                <span className="shrink-0 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white">Book</span>
+                <span className="flex shrink-0 flex-col items-end text-[15px] tabular-nums sm:flex-row sm:gap-6">
+                  <span className="text-muted">{s.durationLabel}</span>
+                  <span className="min-w-14 text-right font-medium">{priceCell(s)}</span>
+                </span>
+                <svg viewBox="0 0 8 14" aria-hidden className="h-3.5 w-2 shrink-0 text-muted group-hover:text-accent"><path d="M1 1l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span className="sr-only">Book</span>
               </button>
             </li>
           ))}
@@ -150,7 +160,7 @@ export function BookingFlow(p: Props) {
       )}
 
       {step === "time" && service && (
-        <div className="space-y-5">
+        <div>
           <SlotPicker
             username={p.username}
             serviceId={service.id}
@@ -163,9 +173,11 @@ export function BookingFlow(p: Props) {
             notice={notice}
             refreshKey={refreshKey}
           />
-          <button type="button" className={`${btn} w-full`} disabled={!slot} onClick={() => { setNotice(null); setStep("details"); }}>
-            {when ? `Continue with ${when.toFormat("ccc, LLL d 'at' h:mm a")}` : "Pick a time to continue"}
-          </button>
+          <div className="sticky bottom-0 z-10 -mx-4 mt-6 border-t border-line bg-surface px-4 py-3 sm:static sm:mx-0 sm:border-0 sm:px-0 sm:py-0">
+            <button type="button" className={`${btn} w-full`} disabled={!slot} onClick={() => { setNotice(null); setStep("details"); }}>
+              {when ? `Continue with ${when.toFormat("ccc, LLL d 'at' h:mm a")}` : "Pick a time to continue"}
+            </button>
+          </div>
         </div>
       )}
 
@@ -175,18 +187,20 @@ export function BookingFlow(p: Props) {
             e.preventDefault();
             submit(e.currentTarget);
           }}
-          className="space-y-4"
+          className="space-y-5"
         >
-          <dl className="grid gap-1 rounded-2xl border border-line p-4 text-sm">
-            <div className="flex justify-between gap-4"><dt className="text-muted">With</dt><dd className="text-right font-semibold">{p.displayName}</dd></div>
-            <div className="flex justify-between gap-4"><dt className="text-muted">Date</dt><dd className="text-right font-semibold">{when.toFormat("cccc, LLLL d, yyyy")}</dd></div>
-            <div className="flex justify-between gap-4"><dt className="text-muted">Time</dt><dd className="text-right font-semibold">{when.toFormat("h:mm a")} – {end.toFormat("h:mm a")}</dd></div>
-            <div className="flex justify-between gap-4"><dt className="text-muted">Timezone</dt><dd className="text-right font-semibold">{zone.replace(/_/g, " ")} ({when.toFormat("ZZZZ")})</dd></div>
-            <div className="flex justify-between gap-4"><dt className="text-muted">Where</dt><dd className="text-right font-semibold">{p.location}</dd></div>
-            <button type="button" onClick={() => setStep("time")} className="mt-1 min-h-11 justify-self-start font-semibold text-accent">
+          <div>
+            <dl className="divide-y divide-line border-b border-line text-[15px]">
+              <div className="flex justify-between gap-4 py-2.5"><dt className="text-muted">With</dt><dd className="min-w-0 break-words text-right font-medium">{p.displayName}</dd></div>
+              <div className="flex justify-between gap-4 py-2.5"><dt className="text-muted">Date</dt><dd className="text-right font-medium">{when.toFormat("cccc, LLLL d, yyyy")}</dd></div>
+              <div className="flex justify-between gap-4 py-2.5"><dt className="text-muted">Time</dt><dd className="text-right font-medium">{when.toFormat("h:mm a")} – {end.toFormat("h:mm a")}</dd></div>
+              <div className="flex justify-between gap-4 py-2.5"><dt className="text-muted">Timezone</dt><dd className="text-right font-medium">{zone.replace(/_/g, " ")} ({when.toFormat("ZZZZ")})</dd></div>
+              <div className="flex justify-between gap-4 py-2.5"><dt className="text-muted">Where</dt><dd className="min-w-0 break-words text-right font-medium">{p.location}</dd></div>
+            </dl>
+            <button type="button" onClick={() => setStep("time")} className="mt-1 min-h-11 font-medium text-accent hover:underline">
               Change time
             </button>
-          </dl>
+          </div>
           <div>
             <label htmlFor="name" className={label}>Your name</label>
             <input id="name" name="name" required autoComplete="name" className={input} maxLength={100} />
@@ -194,7 +208,7 @@ export function BookingFlow(p: Props) {
           <div>
             <label htmlFor="email" className={label}>Email</label>
             <input id="email" name="email" type="email" required autoComplete="email" inputMode="email" className={input} maxLength={200} aria-describedby="email-hint" />
-            <p id="email-hint" className="mt-1 text-sm text-muted">We send your confirmation and a link to change the booking.</p>
+            <p id="email-hint" className={hint}>We send your confirmation and a link to change the booking.</p>
           </div>
           <div>
             <label htmlFor="phone" className={label}>Phone <span className="font-normal text-muted">(optional)</span></label>
@@ -209,11 +223,11 @@ export function BookingFlow(p: Props) {
             <input id="website" name="website" tabIndex={-1} autoComplete="off" />
           </div>
           {p.mode === "approval" && (
-            <p className="rounded-2xl bg-warn-soft px-4 py-3 text-sm text-warn">
+            <p className="rounded-xl bg-warn-soft px-4 py-3 text-[15px] text-warn">
               {p.displayName} approves each booking. Your time is held as <strong>pending</strong> for up to {p.pendingHours} hours while they review it.
             </p>
           )}
-          {error && <p role="alert" className="rounded-2xl bg-bad-soft px-4 py-3 text-sm text-bad">{error}</p>}
+          {error && <p role="alert" className="rounded-xl bg-bad-soft px-4 py-3 text-[15px] text-bad">{error}</p>}
           <button type="submit" className={`${btn} w-full`} disabled={submitting}>
             {submitting ? "Booking…" : p.mode === "approval" ? "Send booking request" : "Confirm booking"}
           </button>

@@ -24,14 +24,14 @@ export function TimezoneSelect({ value, onChange, id = "tz", labelText = "Times 
   }, [value]);
   return (
     <div className="flex flex-wrap items-center gap-2 text-sm">
-      <label htmlFor={id} className="font-semibold text-muted">
+      <label htmlFor={id} className="text-muted">
         {labelText}
       </label>
       <select
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="min-h-11 max-w-full rounded-full border border-line bg-white px-3 text-sm font-semibold focus:border-accent focus:outline-none"
+        className="min-h-11 max-w-full rounded-xl border border-line bg-surface px-3 text-sm font-medium focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
       >
         {zones.map((z) => (
           <option key={z} value={z}>

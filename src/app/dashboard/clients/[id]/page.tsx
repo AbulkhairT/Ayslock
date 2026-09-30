@@ -38,25 +38,25 @@ export default async function ClientPage({ params, searchParams }: PageProps<"/d
     <div className="space-y-4">
       <Link href="/dashboard/clients" className="inline-block min-h-11 py-2.5 text-sm font-semibold text-muted">← All clients</Link>
       <Flash sp={sp} />
-      <section className="rounded-3xl border border-line bg-white p-5">
-        <h1 className="text-2xl font-bold tracking-tight">{client.name}</h1>
+      <section className="border-t border-line pt-5">
+        <h1 className="text-[28px] font-semibold leading-tight tracking-tight">{client.name}</h1>
         <p className="text-muted">
           <a href={`mailto:${client.email}`} className="text-accent">{client.email}</a>
           {client.phone && <> · <a href={`tel:${client.phone}`} className="text-accent">{client.phone}</a></>}
         </p>
       </section>
-      <section className="rounded-3xl border border-line bg-white p-5">
+      <section className="border-t border-line pt-5">
         <form action={saveClientNotes} className="space-y-3">
           <input type="hidden" name="id" value={client.id} />
           <input type="hidden" name="back" value={`/dashboard/clients/${client.id}`} />
-          <label htmlFor="notes" className="block font-bold">Private notes</label>
+          <label htmlFor="notes" className="block font-semibold">Private notes</label>
           <p className="text-sm text-muted">Only you can see these. Clients never do.</p>
           <textarea id="notes" name="notes" rows={4} defaultValue={client.notes} maxLength={5000} className={textarea} />
           <button className={btnSmallAccent}>Save notes</button>
         </form>
       </section>
-      <section className="rounded-3xl border border-line bg-white p-5">
-        <h2 className="mb-2 font-bold">History</h2>
+      <section className="border-t border-line pt-5">
+        <h2 className="mb-2 font-semibold">History</h2>
         {history.length === 0 ? <p className="text-sm text-muted">No appointments yet.</p> : (
           <ul className="divide-y divide-line">
             {history.map((h) => (

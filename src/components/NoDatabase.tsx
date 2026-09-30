@@ -13,8 +13,8 @@ export function noSharedDatabase() {
 export function NoDatabaseNotice({ what, className = "" }: { what: string; className?: string }) {
   if (!noSharedDatabase()) return null;
   return (
-    <section role="status" className={`${className} rounded-2xl border border-warn/40 bg-warn-soft p-5 text-sm text-warn`}>
-      <h2 className="font-bold">This site isn&apos;t connected to a database yet</h2>
+    <section role="status" className={`${className} rounded-xl bg-warn-soft p-4 text-[15px] text-warn`}>
+      <h2 className="font-semibold">This site isn&apos;t connected to a database yet</h2>
       <p className="mt-1">
         {what} Each server copy keeps its own temporary data until a database is added, so the next page can land on a
         copy that has never seen it.

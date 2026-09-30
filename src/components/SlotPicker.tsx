@@ -73,18 +73,18 @@ export function SlotPicker(p: SlotPickerProps) {
     <div className="space-y-4">
       <TimezoneSelect value={p.zone} onChange={p.onZoneChange} />
       {p.notice && (
-        <p role="alert" className="rounded-2xl bg-warn-soft px-4 py-3 text-sm font-medium text-warn">
+        <p role="alert" className="rounded-xl bg-warn-soft px-4 py-3 text-[15px] font-medium text-warn">
           {p.notice}
         </p>
       )}
       <div className="flex items-center justify-between gap-2">
-        <button type="button" className="min-h-11 rounded-full px-4 text-sm font-semibold text-accent disabled:text-muted/50" disabled={week === 0} onClick={() => setWeek((w) => w - 1)} aria-label="Previous week">
+        <button type="button" className="min-h-11 rounded-xl px-3 text-[15px] font-medium text-accent hover:bg-accent-soft disabled:bg-transparent disabled:text-muted/50" disabled={week === 0} onClick={() => setWeek((w) => w - 1)} aria-label="Previous week">
           ← Earlier
         </button>
-        <p className="text-sm font-semibold" aria-live="polite">
+        <p className="text-[15px] font-semibold" aria-live="polite">
           {days[0].toFormat("LLL d")} – {days[6].toFormat("LLL d, yyyy")}
         </p>
-        <button type="button" className="min-h-11 rounded-full px-4 text-sm font-semibold text-accent disabled:text-muted/50" disabled={week >= maxWeeks - 1} onClick={() => setWeek((w) => w + 1)} aria-label="Next week">
+        <button type="button" className="min-h-11 rounded-xl px-3 text-[15px] font-medium text-accent hover:bg-accent-soft disabled:bg-transparent disabled:text-muted/50" disabled={week >= maxWeeks - 1} onClick={() => setWeek((w) => w + 1)} aria-label="Next week">
           Later →
         </button>
       </div>
@@ -102,12 +102,12 @@ export function SlotPicker(p: SlotPickerProps) {
               disabled={!has}
               onClick={() => setDay(key)}
               aria-label={`${d.toFormat("cccc, LLLL d")}${has ? "" : ", no times"}`}
-              className={`flex min-h-16 flex-col items-center justify-center rounded-2xl border text-center transition ${
-                active ? "border-ink bg-ink text-white" : has ? "border-line bg-white hover:border-ink" : "border-transparent bg-transparent text-muted/50"
+              className={`flex min-h-16 flex-col items-center justify-center rounded-xl border text-center transition-colors ${
+                active ? "border-accent bg-accent text-white" : has ? "border-line bg-surface hover:border-accent" : "border-transparent bg-transparent text-muted/40"
               }`}
             >
-              <span className="text-xs font-semibold uppercase">{d.toFormat("ccc")}</span>
-              <span className="text-lg font-bold">{d.day}</span>
+              <span className="text-[11px] font-semibold uppercase tracking-wide">{d.toFormat("ccc")}</span>
+              <span className="text-lg font-semibold tabular-nums">{d.day}</span>
             </button>
           );
         })}
@@ -116,12 +116,12 @@ export function SlotPicker(p: SlotPickerProps) {
       {load.state === "loading" && (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4" aria-busy="true" aria-label="Loading times">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-12 animate-pulse rounded-2xl bg-line/60" />
+            <div key={i} className="h-12 animate-pulse rounded-xl bg-canvas" />
           ))}
         </div>
       )}
       {load.state === "error" && (
-        <div role="alert" className="rounded-2xl bg-bad-soft px-4 py-3 text-sm text-bad">
+        <div role="alert" className="rounded-xl bg-bad-soft px-4 py-3 text-[15px] text-bad">
           {load.message}{" "}
           <button type="button" onClick={fetchSlots} className="font-semibold underline">
             Try again
@@ -129,10 +129,10 @@ export function SlotPicker(p: SlotPickerProps) {
         </div>
       )}
       {load.state === "ready" && !activeDay && (
-        <div className="rounded-2xl border border-dashed border-line px-4 py-8 text-center">
+        <div className="border-y border-line px-4 py-8 text-center">
           <p className="font-semibold">No open times this week.</p>
           {week < maxWeeks - 1 ? (
-            <button type="button" onClick={() => setWeek((w) => w + 1)} className="mt-2 min-h-11 rounded-full px-4 text-sm font-semibold text-accent">
+            <button type="button" onClick={() => setWeek((w) => w + 1)} className="mt-2 min-h-11 rounded-xl px-3 text-[15px] font-medium text-accent hover:bg-accent-soft">
               Check next week →
             </button>
           ) : (
@@ -142,7 +142,7 @@ export function SlotPicker(p: SlotPickerProps) {
       )}
       {load.state === "ready" && activeDay && (
         <fieldset>
-          <legend className="mb-2 text-sm font-semibold">{DateTime.fromISO(activeDay, { zone: p.zone }).toFormat("cccc, LLLL d")}</legend>
+          <legend className="mb-2 text-[15px] font-semibold">{DateTime.fromISO(activeDay, { zone: p.zone }).toFormat("cccc, LLLL d")}</legend>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {times.map((s) => {
               const on = s === p.selected;
@@ -152,7 +152,7 @@ export function SlotPicker(p: SlotPickerProps) {
                   type="button"
                   aria-pressed={on}
                   onClick={() => p.onSelect(s)}
-                  className={`min-h-12 rounded-2xl border text-base font-semibold transition ${on ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink"}`}
+                  className={`min-h-12 rounded-xl border text-base font-medium tabular-nums transition-colors ${on ? "border-accent bg-accent font-semibold text-white" : "border-line bg-surface hover:border-accent"}`}
                 >
                   {DateTime.fromISO(s).setZone(p.zone).toFormat("h:mm a")}
                 </button>

@@ -51,7 +51,7 @@ export async function currentUser(): Promise<User | null> {
 
 export type AuthResult = { ok: true; confirmEmail?: boolean } | { ok: false; error: string };
 
-export async function signUp(email: string, password: string, ip: string, next = "/onboarding"): Promise<AuthResult> {
+export async function signUp(email: string, password: string, ip: string, next = "/onboarding", origin = env.appUrl): Promise<AuthResult> {
   email = email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Please enter a valid email." };
   if (password.length < 8) return { ok: false, error: "Use a password with at least 8 characters." };
@@ -64,7 +64,7 @@ export async function signUp(email: string, password: string, ip: string, next =
   if (modes.auth === "supabase") {
     const supabase = await supabaseServer();
     // The confirmation email links back here, then on to setup (with the claimed username).
-    const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${env.appUrl}/auth/callback?next=${encodeURIComponent(next)}` } });
+    const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` } });
     if (error) return { ok: false, error: error.code === "user_already_exists" ? "An account with this email already exists. Try logging in." : error.message };
     // With email confirmation on, Supabase hides existing accounts by returning a user with no identities.
     if (!data.session && data.user && data.user.identities?.length === 0) return { ok: false, error: "An account with this email already exists. Try logging in." };

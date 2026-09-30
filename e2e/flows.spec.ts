@@ -36,16 +36,36 @@ async function outboxLink(page: Page, pattern: RegExp) {
   return m![0];
 }
 
-test("home lookup: unknown usernames get a friendly message, @ and case are ignored", async ({ page }) => {
+test("home search: names and @usernames, privacy, empty state, then straight to booking", async ({ page }) => {
   await page.goto("/");
   await shot(page, "01-home");
-  await page.getByLabel("Enter your provider's @username.").fill("@nobody_here");
-  await page.getByRole("button", { name: "Find" }).click();
+  const box = page.getByLabel("Enter a name or @username");
   // First database touch on a fresh demo database runs migrations and the seed.
-  await expect(page.getByText("We couldn't find @nobody_here")).toBeVisible({ timeout: 20_000 });
-  await page.getByLabel("Enter your provider's @username.").fill("@Marco");
-  await page.getByRole("button", { name: "Find" }).click();
+  await box.fill("nobody here");
+  await expect(page.getByText("No one found for “nobody here”.")).toBeVisible({ timeout: 20_000 });
+  // Invite-only providers never show up by name.
+  await box.fill("Lindqvist");
+  await expect(page.getByText("No one found for “Lindqvist”.")).toBeVisible();
+  await box.fill("bell");
+  const results = page.getByRole("list", { name: "Search results" });
+  await expect(results.getByRole("link")).toHaveCount(1);
+  await expect(results.getByText("@marco · Barber")).toBeVisible();
+  await shot(page, "01b-search");
+  await results.getByRole("link", { name: /Marco Bellini/ }).click();
   await expect(page).toHaveURL(/\/u\/marco$/);
+  await expect(page.getByText("Barber", { exact: true })).toBeVisible();
+  // An exact @username goes straight to the page, even for invite-only providers.
+  await page.goto("/");
+  await box.fill("@Sofia");
+  await expect(page.getByRole("list", { name: "Search results" }).getByText("Sofia Lindqvist")).toBeVisible();
+  await box.press("Enter");
+  await expect(page).toHaveURL(/\/u\/sofia$/);
+  // Without JavaScript the form still works.
+  await page.goto("/?q=%40marco");
+  await expect(page).toHaveURL(/\/u\/marco$/);
+  // Shared links open the booking page directly.
+  await page.goto("/@lena");
+  await expect(page.getByRole("heading", { name: "Lena Okafor" })).toBeVisible();
 });
 
 test("open booking end to end, then reschedule, calendar file and cancel", async ({ page, request }) => {
@@ -163,18 +183,16 @@ test("private mode: no availability without an approved, unrevoked link", async 
 });
 
 test("provider sign-up, onboarding and the ready screen", async ({ page }) => {
-  // Claim the name on the home page first; it carries through sign-up into setup.
   await page.goto("/");
-  await page.getByLabel("Choose your username").first().fill("@Jordan_Trains");
-  await expect(page.getByText("@jordan_trains is free").first()).toBeVisible({ timeout: 20_000 });
-  await page.getByRole("button", { name: "Create", exact: true }).first().click();
-  await expect(page.getByText(/\/@jordan_trains is free/)).toBeVisible();
+  await page.getByRole("link", { name: "Create your profile" }).first().click();
+  await expect(page).toHaveURL(/\/signup$/);
   await page.getByLabel("Email").fill(`new${Date.now()}@example.com`);
   await page.getByLabel("Password").fill("correct-horse-battery");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(/\/onboarding/);
   await page.getByLabel("Your name").fill("Jordan Park");
-  await expect(page.getByLabel("Username")).toHaveValue("jordan_trains");
+  await page.getByLabel("What you do").fill("Personal trainer");
+  await page.getByLabel("Username").fill("Jordan_Trains");
   await page.getByLabel("Meeting details").or(page.getByLabel("Address or area")).fill("Riverside Park, north gate");
   await shot(page, "11-onboarding");
   await page.getByRole("button", { name: "Next: services" }).click();
@@ -185,7 +203,8 @@ test("provider sign-up, onboarding and the ready screen", async ({ page }) => {
   await expect(page.getByLabel("Saturday")).not.toBeChecked();
   await page.getByRole("button", { name: "Create my Ayslock" }).click();
   await expect(page.getByRole("heading", { name: "Your Ayslock is ready." })).toBeVisible();
-  await expect(page.getByText(/\/u\/jordan_trains$/)).toBeVisible();
+  await expect(page.getByText(/\/@jordan_trains$/).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Copy @jordan_trains" }).first()).toBeVisible();
   await expect(page.getByRole("img", { name: /QR code/ })).toBeVisible();
   await shot(page, "12-ready");
 

@@ -3,6 +3,8 @@ import { requireProvider } from "@/lib/session";
 import { Logo } from "@/components/Logo";
 import { signOutAction } from "../(auth)/actions";
 import { DashNav } from "./DashNav";
+import { ShareBar } from "./ShareBar";
+import { env } from "@/lib/env";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   const provider = await requireProvider();
@@ -20,6 +22,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
           </form>
         </div>
       </header>
+      <ShareBar link={`${env.appUrl}/@${provider.username}`} username={provider.username} name={provider.display_name} />
       <DashNav />
       <main id="main" className="mt-6">{children}</main>
     </div>

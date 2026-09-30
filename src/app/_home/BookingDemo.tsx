@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 const STEPS = [
-  { title: "Type their @username", body: "The name your barber, tutor or trainer gave you. No search, no directory." },
+  { title: "Find them", body: "Search their name or @username, or open the link they sent you." },
   { title: "Choose a service", body: "Length and price are shown up front." },
   { title: "Pick a time", body: "Only real free times, shown in your own timezone." },
   { title: "You're booked", body: "A confirmation by email, with a link to change or cancel." },
@@ -25,20 +25,24 @@ function Scene({ step }: { step: number }) {
   if (step === 0) {
     return (
       <div className="ays-in">
-        <p className="text-[22px] font-semibold tracking-tight">Book your next visit.</p>
-        <p className="mt-4 text-sm text-muted">Enter your provider&apos;s @username.</p>
-        <div className="mt-2 flex gap-2">
-          <div className="flex h-12 flex-1 items-center rounded-xl border border-accent px-3 text-lg ring-2 ring-accent/20">
-            <span className="text-muted">@</span>
-            {/* Each letter is always in the layout and just fades in, so no browser can clip it. */}
-            <span>
-              {"marco".split("").map((ch, i) => (
-                <span key={i} className="ays-letter" style={{ animationDelay: `${250 + i * 160}ms` }}>{ch}</span>
-              ))}
-            </span>
-            <span className="ml-px h-6 w-px animate-pulse bg-ink motion-reduce:hidden" />
-          </div>
-          <span className="ays-press grid h-12 place-items-center rounded-xl bg-accent px-4 font-semibold text-white">Find</span>
+        <p className="text-[22px] font-semibold tracking-tight">Who are you booking with?</p>
+        <div className="mt-4 flex h-12 items-center gap-2 rounded-xl border border-accent px-3 text-lg ring-2 ring-accent/20">
+          <svg viewBox="0 0 20 20" aria-hidden className="h-4 w-4 shrink-0 text-muted"><circle cx="8.5" cy="8.5" r="5.75" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M13 13l4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+          {/* Each letter is always in the layout and just fades in, so no browser can clip it. */}
+          <span>
+            {"marco".split("").map((ch, i) => (
+              <span key={i} className="ays-letter" style={{ animationDelay: `${250 + i * 160}ms` }}>{ch}</span>
+            ))}
+          </span>
+          <span className="-ml-1.5 h-6 w-px animate-pulse bg-ink motion-reduce:hidden" />
+        </div>
+        <div className="ays-letter mt-3 flex items-center gap-3 border-y border-line py-3" style={{ animationDelay: "1300ms" }}>
+          <span className="ays-press grid h-10 w-10 shrink-0 place-items-center rounded-full bg-canvas text-sm font-semibold" style={{ animationDelay: "1900ms" }}>MB</span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold">Marco Bellini</span>
+            <span className="block text-sm text-muted">@marco · Barber</span>
+          </span>
+          <svg viewBox="0 0 8 14" aria-hidden className="h-3.5 w-2 shrink-0 text-muted"><path d="M1 1l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </div>
       </div>
     );
@@ -55,7 +59,7 @@ function Scene({ step }: { step: number }) {
           <span className="grid h-11 w-11 place-items-center rounded-full bg-accent-soft font-semibold text-accent">MB</span>
           <div>
             <p className="font-semibold">Marco Bellini</p>
-            <p className="text-sm text-muted">@marco · Brooklyn, NY</p>
+            <p className="text-sm text-muted">@marco · Barber</p>
           </div>
         </div>
         <ul className="mt-4 divide-y divide-line border-y border-line">

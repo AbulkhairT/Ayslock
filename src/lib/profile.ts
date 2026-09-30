@@ -9,10 +9,13 @@ export const profileSchema = z.object({
     if (p) ctx.addIssue({ code: "custom", message: p });
   }).transform((v) => normalizeUsername(v)!),
   timezone: z.string().refine(isValidZone, "Pick a valid timezone."),
+  profession: z.string().trim().max(60, "Keep what you do under 60 characters.").default(""),
   bio: z.string().trim().max(500, "Keep the bio under 500 characters.").default(""),
   location_kind: z.enum(["in_person", "online"]),
   location_text: z.string().trim().max(200).default(""),
   avatar_url: z.string().trim().max(500).refine((v) => !v || /^https:\/\//.test(v), "Avatar must be an https:// image link.").default(""),
+  // A checkbox: "on" when ticked. Absent (onboarding) keeps the default of being listed.
+  listed: z.preprocess((v) => (v == null ? undefined : v === "on"), z.boolean().optional()),
 });
 
 export const serviceSchema = z.object({

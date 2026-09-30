@@ -4,7 +4,7 @@ Ayslock lets people book time with a service provider using their @username. A b
 
 > Find your person. Pick a time. You’re booked.
 
-This repository is a working MVP: a mobile-first Next.js app where clients look up a provider by exact username, pick a service and a time, and book without an account. Providers sign up, set services and hours, and manage a simple schedule.
+This repository is a working MVP: a mobile-first Next.js app where clients find a provider by name or @username (or open the link the provider sent), pick a service and a time, and book without an account. Providers sign up, set services and hours, and manage a simple schedule.
 
 | Home | Pick a time | Booked | Provider schedule |
 | --- | --- | --- | --- |
@@ -52,7 +52,8 @@ You can also create a new provider at `/signup`.
 ## What works
 
 **Clients**
-- Home page centered on “Enter your provider's @username.” Accepts `@name`, `name`, any case. Unknown names get a friendly message; there is no search, listing or directory, and profiles are `noindex`.
+- Home page centered on “Who are you booking with?” with one search box for a name or @username (live results as you type; also works without JavaScript). An exact username always finds the provider. Name search only includes providers who are listed (a setting, on by default), not invite-only, and have a bookable service. Results show only name, @username, what they do and photo, never availability. Unknown names get a plain empty state, and profiles are `noindex`.
+- Providers copy their link (`/@name`) or @username from the top of the dashboard; shared links open the booking page directly and carry a link preview.
 - Profile at `/u/<username>`: name, avatar (initials if none), @username, bio, location or online details, services with duration and optional price.
 - Booking: service → date and time → name and email (phone and note optional) → confirm. Times are shown in the browser's timezone by default, with a timezone picker; the final summary shows the full date and the timezone.
 - Only slots that fit the whole service inside working hours, outside breaks, after the minimum notice, inside the booking window, and clear of other appointments plus the buffer are offered.
@@ -137,7 +138,7 @@ What the tests cover:
   - Reminders: 24 hours ahead, none for short-notice bookings, and they follow reschedules and cancellations. A due reminder for a cancelled appointment is skipped, and three concurrent workers never deliver a notification twice.
   - Private access is refused without a link, with a tampered link, with a manage token used as an access token, after expiry, after revocation, and for a different provider. The slots endpoint returns 403 with no times.
   - Tampered or revoked manage links fail, and concurrent sign-ups for the same username give exactly one winner.
-- **End to end** (`e2e/flows.spec.ts`): lookup, open booking with timezone labels, `.ics`, save provider, reschedule, cancel, notification preview; two browsers racing for one slot; approval flow; private request, approve, book with link, revoke; provider sign-up, onboarding and the ready screen.
+- **End to end** (`e2e/flows.spec.ts`): search by name and @username (privacy and empty state), open booking with timezone labels, `.ics`, save provider, reschedule, cancel, notification preview; two browsers racing for one slot; approval flow; private request, approve, book with link, revoke; provider sign-up, onboarding and the ready screen.
 
 ## Deliberately not in this MVP
 

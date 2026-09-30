@@ -10,6 +10,7 @@ interface DemoProvider {
   email: string;
   username: string;
   display_name: string;
+  profession: string;
   bio: string;
   timezone: string;
   location_kind: "in_person" | "online";
@@ -27,6 +28,7 @@ export const DEMO_PROVIDERS: DemoProvider[] = [
     email: "marco@example.com",
     username: "marco",
     display_name: "Marco Bellini",
+    profession: "Barber",
     bio: "Classic cuts, skin fades and hot-towel shaves. Twelve years behind the chair.",
     timezone: "America/New_York",
     location_kind: "in_person",
@@ -46,6 +48,7 @@ export const DEMO_PROVIDERS: DemoProvider[] = [
     email: "lena@example.com",
     username: "lena",
     display_name: "Lena Okafor",
+    profession: "Massage therapist",
     bio: "Licensed massage therapist focused on recovery, desk-worker tension and sports massage.",
     timezone: "America/Chicago",
     location_kind: "in_person",
@@ -64,6 +67,7 @@ export const DEMO_PROVIDERS: DemoProvider[] = [
     email: "sofia@example.com",
     username: "sofia",
     display_name: "Sofia Lindqvist",
+    profession: "Maths and physics tutor",
     bio: "Maths and physics tutor for GCSE, A-level and first-year university. Patient, practical, exam-focused.",
     timezone: "Europe/London",
     location_kind: "online",
@@ -110,9 +114,9 @@ async function seedProvider(q: Queryable, p: DemoProvider) {
     [stableId(`user:${p.username}`), p.email, hashPassword(DEMO_PASSWORD)],
   );
   const [prov] = await q.query<{ id: string }>(
-    `insert into providers (id, owner_id, email, username, display_name, bio, timezone, location_kind, location_text, access_mode, buffer_minutes, min_notice_minutes)
-     values ($12, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning id`,
-    [user.id, p.email, p.username, p.display_name, p.bio, p.timezone, p.location_kind, p.location_text, p.access_mode, p.buffer_minutes, p.min_notice_minutes, stableId(`provider:${p.username}`)],
+    `insert into providers (id, owner_id, email, username, display_name, bio, timezone, location_kind, location_text, access_mode, buffer_minutes, min_notice_minutes, profession)
+     values ($12, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $13) returning id`,
+    [user.id, p.email, p.username, p.display_name, p.bio, p.timezone, p.location_kind, p.location_text, p.access_mode, p.buffer_minutes, p.min_notice_minutes, stableId(`provider:${p.username}`), p.profession],
   );
   const serviceIds: string[] = [];
   for (const [i, s] of p.services.entries()) {

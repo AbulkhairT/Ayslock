@@ -125,13 +125,14 @@ export async function saveClientNotes(f: FormData) {
 
 export async function saveProfile(f: FormData) {
   await run(f, "Profile saved.", async (p) => {
-    const r = profileSchema.safeParse(formObject(f, ["display_name", "username", "timezone", "bio", "location_kind", "location_text", "avatar_url"]));
+    const r = profileSchema.safeParse(formObject(f, ["display_name", "username", "timezone", "profession", "bio", "location_kind", "location_text", "avatar_url", "listed"]));
     if (!r.success) throw new UserError(r.error.issues[0].message);
     const v = r.data;
     try {
       await (await getDb()).query(
-        `update providers set display_name = $2, username = $3, timezone = $4, bio = $5, location_kind = $6, location_text = $7, avatar_url = $8, updated_at = now() where id = $1`,
-        [p.id, v.display_name, v.username, v.timezone, v.bio, v.location_kind, v.location_text, v.avatar_url || null],
+        `update providers set display_name = $2, username = $3, timezone = $4, bio = $5, location_kind = $6, location_text = $7, avatar_url = $8,
+         profession = $9, listed = $10, updated_at = now() where id = $1`,
+        [p.id, v.display_name, v.username, v.timezone, v.bio, v.location_kind, v.location_text, v.avatar_url || null, v.profession, v.listed ?? false],
       );
     } catch (e) {
       if (pgCode(e) === "23505") throw new UserError(`@${v.username} is taken. Try another username.`);

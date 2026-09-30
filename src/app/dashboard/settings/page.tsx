@@ -176,6 +176,17 @@ export default async function Settings({ searchParams }: PageProps<"/dashboard/s
             <input id="username" name="username" defaultValue={p.username} className={input} required maxLength={30} autoCapitalize="none" />
             <p className={hint}>Changing it breaks links you already shared.</p>
           </div>
+          <div><label className={label} htmlFor="profession">What you do</label><input id="profession" name="profession" defaultValue={p.profession} className={input} maxLength={60} placeholder="Barber, dentist, piano teacher…" /></div>
+          <div>
+            <label className="flex min-h-11 items-start gap-3">
+              <input type="checkbox" name="listed" defaultChecked={p.listed} className="mt-1 h-5 w-5 shrink-0 accent-accent" />
+              <span>
+                <span className="font-medium">Clients can find me by name</span>
+                <span className={`block ${hint}`}>Your exact @username always finds you. Invite-only pages never show up in name search.</span>
+              </span>
+            </label>
+            <input type="hidden" name="listed" value="off" />
+          </div>
           <ZoneField name="timezone" initial={p.timezone} />
           <div><label className={label} htmlFor="bio">Bio</label><textarea id="bio" name="bio" rows={3} defaultValue={p.bio} className={textarea} maxLength={500} /></div>
           <div>

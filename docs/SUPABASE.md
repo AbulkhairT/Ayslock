@@ -92,7 +92,7 @@ All times are stored in UTC (`timestamptz`); each provider keeps their IANA time
 
 | Table | Holds | Notable rules |
 | --- | --- | --- |
-| `providers` | One row per provider: `owner_id` (the Supabase Auth user), `username`, name, bio, timezone, location, booking mode (`open` / `approval` / `private`), notice, booking window, buffer, how long requests are held, how long private links last | Username is 3 to 30 lowercase letters, digits or `_`, unique regardless of case. One profile per account. |
+| `providers` | One row per provider: `owner_id` (the Supabase Auth user), `username`, name, what they do (`profession`), whether they show up in name search (`listed`), bio, timezone, location, booking mode (`open` / `approval` / `private`), notice, booking window, buffer, how long requests are held, how long private links last | Username is 3 to 30 lowercase letters, digits or `_`, unique regardless of case. One profile per account. |
 | `services` | What can be booked: name, description, length in minutes, price in cents, currency, active, order | Length 5 to 720 minutes; price can be empty |
 | `weekly_hours` | Working hours per weekday (1 = Monday) in the provider's local time; several rows per day make breaks | End after start |
 | `availability_exceptions` | Days off or special hours for a date | Empty times = closed all day |

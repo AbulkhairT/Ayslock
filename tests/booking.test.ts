@@ -276,3 +276,35 @@ describe("manage links and usernames", () => {
     expect((await m.providers.providerByUsername(db, "SAMENAME"))?.username).toBe("samename");
   });
 });
+
+describe("provider search", () => {
+  const names = async (q: string) => (await (await import("../src/lib/search")).searchProviders(db, q)).map((r) => r.username);
+
+  it("finds people by name or @username, exact username first", async () => {
+    expect(await names("marco")).toEqual(["marco"]);
+    expect(await names("Bell")).toEqual(["marco"]);
+    expect(await names("@Marco")).toEqual(["marco"]);
+    expect(await names("lena okafor")).toEqual(["lena"]);
+    const [r] = await (await import("../src/lib/search")).searchProviders(db, "marco");
+    expect(r).toEqual({ username: "marco", display_name: "Marco Bellini", profession: "Barber", avatar_url: null, access_mode: "open", exact: true });
+  });
+
+  it("keeps invite-only and unlisted people out of name search, but not exact usernames", async () => {
+    expect(await names("sofia")).toEqual(["sofia"]); // exact username
+    expect(await names("Lindqvist")).toEqual([]); // private: never by name
+    await db.query("update providers set listed = false where username = 'lena'");
+    try {
+      expect(await names("okafor")).toEqual([]);
+      expect(await names("@lena")).toEqual(["lena"]);
+    } finally {
+      await db.query("update providers set listed = true where username = 'lena'");
+    }
+  });
+
+  it("treats wildcards literally and ignores tiny queries", async () => {
+    expect(await names("%%")).toEqual([]);
+    expect(await names("_a")).toEqual([]);
+    expect(await names("m")).toEqual([]);
+    expect(await names("@")).toEqual([]);
+  });
+});

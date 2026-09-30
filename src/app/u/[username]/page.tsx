@@ -27,7 +27,10 @@ export async function generateMetadata({ params }: PageProps<"/u/[username]">): 
   const p = await load((await params).username);
   if (!p) return { title: "Not found · Ayslock", robots: { index: false } };
   // Profiles are reachable by exact username only; keep them out of search indexes.
-  return { title: `Book ${p.display_name} (@${p.username}) · Ayslock`, robots: { index: false, follow: false } };
+  const title = `Book ${p.display_name} (@${p.username}) · Ayslock`;
+  const description = p.profession ? `${p.profession}. Pick a time and book online, no account needed.` : "Pick a time and book online, no account needed.";
+  // Link previews in WhatsApp and Messages use these. Pages stay out of search engines.
+  return { title, description, openGraph: { title: `Book ${p.display_name}`, description, siteName: "Ayslock", type: "profile" }, robots: { index: false, follow: false } };
 }
 
 export default async function ProviderPage({ params, searchParams }: PageProps<"/u/[username]">) {
@@ -56,6 +59,7 @@ export default async function ProviderPage({ params, searchParams }: PageProps<"
         <Avatar name={provider.display_name} url={provider.avatar_url} size={64} />
         <div className="min-w-0">
           <h1 className={`break-words font-semibold leading-tight tracking-tight ${provider.display_name.length > 24 ? "text-[22px]" : "text-[28px]"}`}>{provider.display_name}</h1>
+          {provider.profession && <p className="break-words font-medium">{provider.profession}</p>}
           <p className="text-muted">
             @{provider.username}
             <span aria-hidden> · </span>

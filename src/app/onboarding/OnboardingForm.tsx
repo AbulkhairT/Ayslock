@@ -54,6 +54,11 @@ export function OnboardingForm({ appHost, initialUsername = "" }: { appHost: str
           <input id="display_name" name="display_name" maxLength={80} className={input} placeholder="Jordan Lee" />
         </div>
         <div>
+          <label htmlFor="profession" className={label}>What you do <span className="font-normal text-muted">(optional)</span></label>
+          <input id="profession" name="profession" maxLength={60} className={input} placeholder="Barber, dentist, piano teacher…" />
+          <p className={hint}>Shown under your name, so clients know they found the right person.</p>
+        </div>
+        <div>
           <label htmlFor="username" className={label}>Username</label>
           <div className="relative">
             <span aria-hidden className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 font-semibold text-muted">@</span>

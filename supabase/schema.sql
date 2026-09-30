@@ -243,10 +243,20 @@ alter table if exists schema_migrations enable row level security;
 alter table if exists demo_users enable row level security;
 alter table if exists demo_sessions enable row level security;
 
+-- ===== 20260930000004_search.sql =====
+-- Name search on the home page.
+-- profession: a short public line under the name ("Barber", "Maths tutor").
+-- listed: whether the provider shows up when clients search by name. An exact @username
+-- always finds them; invite-only (private) providers never appear in name search.
+alter table providers add column if not exists profession text not null default '' check (char_length(profession) <= 60);
+alter table providers add column if not exists listed boolean not null default true;
+create index if not exists providers_display_name_lower_idx on providers (lower(display_name));
+
 insert into schema_migrations (name) values
   ('20260930000001_schema.sql'),
   ('20260930000002_rls.sql'),
-  ('20260930000003_lockdown_rls.sql')
+  ('20260930000003_lockdown_rls.sql'),
+  ('20260930000004_search.sql')
 on conflict do nothing;
 
 commit;

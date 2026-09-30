@@ -19,7 +19,7 @@ export async function createProfile(_: OnboardState, form: FormData): Promise<On
   const db = await getDb();
   if (await providerByOwner(db, user.id)) redirect("/dashboard");
 
-  const profile = profileSchema.safeParse(formObject(form, ["display_name", "username", "timezone", "bio", "location_kind", "location_text", "avatar_url"]));
+  const profile = profileSchema.safeParse(formObject(form, ["display_name", "username", "timezone", "profession", "bio", "location_kind", "location_text", "avatar_url"]));
   if (!profile.success) return { error: profile.error.issues[0].message, step: 1 };
 
   let rawServices: unknown[] = [];
@@ -46,9 +46,9 @@ export async function createProfile(_: OnboardState, form: FormData): Promise<On
   try {
     await db.tx(async (q) => {
       const [row] = await q.query<{ id: string }>(
-        `insert into providers (owner_id, email, username, display_name, bio, avatar_url, timezone, location_kind, location_text)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id`,
-        [user.id, user.email, p.username, p.display_name, p.bio, p.avatar_url || null, p.timezone, p.location_kind, p.location_text],
+        `insert into providers (owner_id, email, username, display_name, bio, avatar_url, timezone, location_kind, location_text, profession)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning id`,
+        [user.id, user.email, p.username, p.display_name, p.bio, p.avatar_url || null, p.timezone, p.location_kind, p.location_text, p.profession],
       );
       for (const [i, s] of services.entries()) {
         await q.query(
